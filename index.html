@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comrade Champion League</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Teko:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: radial-gradient(ellipse at 50% 50%, #0a1a3a 0%, #040e1f 40%, #000510 70%, #000 100%);
+        }
+
+        .starfield canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .streaks {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            background: linear-gradient(25deg, transparent 40%, rgba(79, 195, 247, .03) 45%, transparent 50%),
+                linear-gradient(205deg, transparent 30%, rgba(79, 195, 247, .02) 35%, transparent 40%);
+        }
+
+        .page {
+            display: none;
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+        }
+
+        .page.active {
+            display: flex;
+        }
+
+        /* === PAGE 1 === */
+        #landing {
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px 20px 120px;
+            position: relative;
+        }
+
+        .logo-img {
+            width: clamp(140px, 20vw, 220px);
+            height: auto;
+            margin-bottom: 8px;
+            animation: lf 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 35px rgba(79, 195, 247, .7)) drop-shadow(0 0 60px rgba(79, 195, 247, .3));
+        }
+
+        @keyframes lf {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .main-title {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(1.8rem, 5.5vw, 4.2rem);
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #fff;
+            text-shadow: 0 0 30px rgba(79, 195, 247, .4), 0 0 60px rgba(79, 195, 247, .2);
+            margin-bottom: 2px;
+        }
+
+        .sub-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: clamp(1rem, 2.5vw, 1.6rem);
+            font-weight: 500;
+            font-style: italic;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            color: rgba(79, 195, 247, .6);
+            margin-bottom: 20px;
+        }
+
+        .char-area {
+            position: relative;
+            width: clamp(280px, 38vw, 460px);
+            height: clamp(340px, 46vw, 560px);
+            flex-shrink: 0;
+        }
+
+        /* === PRIZE & ENTRY SECTION === */
+        .hero-mid {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        /* LEFT - Prize Pool */
+        .prize-left {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding-left: clamp(10px, 4vw, 50px);
+            gap: 6px;
+        }
+
+        .prize-pool-label {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(.55rem, 1.3vw, .85rem);
+            font-weight: 600;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: rgba(79, 195, 247, .5);
+            white-space: nowrap;
+        }
+
+        .prize-pool-amount {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(2rem, 5.5vw, 4rem);
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 30px rgba(79, 195, 247, .4), 0 0 60px rgba(79, 195, 247, .2);
+            line-height: 1;
+        }
+
+        .prize-pool-amount .rupee {
+            color: #4fc3f7;
+        }
+
+        .prize-divider {
+            width: 80%;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(79, 195, 247, .3), rgba(79, 195, 247, .05));
+            margin: 8px 0;
+        }
+
+        .prize-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .prize-row {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .prize-pos {
+            font-family: 'Orbitron', monospace;
+            font-weight: 800;
+            color: rgba(79, 195, 247, .7);
+        }
+
+        .prize-pos sup {
+            font-size: .55em;
+            color: rgba(79, 195, 247, .5);
+        }
+
+        .prize-label {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .4);
+            letter-spacing: 2px;
+        }
+
+        .prize-dash {
+            color: rgba(79, 195, 247, .2);
+            margin: 0 4px;
+        }
+
+        .prize-val {
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(79, 195, 247, .3);
+        }
+
+        .prize-val .rupee {
+            color: #4fc3f7;
+        }
+
+        .prize-1st .prize-pos,
+        .prize-1st .prize-label {
+            font-size: clamp(.75rem, 1.6vw, 1.1rem);
+        }
+
+        .prize-1st .prize-val {
+            font-size: clamp(1.2rem, 2.8vw, 2rem);
+        }
+
+        .prize-2nd .prize-pos,
+        .prize-2nd .prize-label {
+            font-size: clamp(.65rem, 1.3vw, .9rem);
+        }
+
+        .prize-2nd .prize-val {
+            font-size: clamp(1rem, 2.2vw, 1.6rem);
+        }
+
+        .prize-3rd .prize-pos,
+        .prize-3rd .prize-label {
+            font-size: clamp(.55rem, 1.1vw, .78rem);
+        }
+
+        .prize-3rd .prize-val {
+            font-size: clamp(.85rem, 1.8vw, 1.25rem);
+        }
+
+        /* CENTER - Character */
+        .char-center {
+            flex-shrink: 0;
+        }
+
+        /* RIGHT - Entry Fee */
+        .entry-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+            padding-right: clamp(10px, 4vw, 50px);
+        }
+
+        .entry-box {
+            border: 3px solid rgba(79, 195, 247, .4);
+            border-radius: 12px;
+            padding: clamp(15px, 2.5vw, 25px) clamp(25px, 4vw, 45px);
+            text-align: center;
+            background: rgba(79, 195, 247, .03);
+            box-shadow: 0 0 25px rgba(79, 195, 247, .08), inset 0 0 15px rgba(79, 195, 247, .02);
+            animation: entryGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes entryGlow {
+            from {
+                box-shadow: 0 0 15px rgba(79, 195, 247, .06), inset 0 0 10px rgba(79, 195, 247, .02);
+                border-color: rgba(79, 195, 247, .3);
+            }
+
+            to {
+                box-shadow: 0 0 35px rgba(79, 195, 247, .12), inset 0 0 20px rgba(79, 195, 247, .03);
+                border-color: rgba(79, 195, 247, .55);
+            }
+        }
+
+        .entry-amount {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            color: #4fc3f7;
+            text-shadow: 0 0 20px rgba(79, 195, 247, .4);
+            line-height: 1.1;
+        }
+
+        .entry-label {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(.55rem, 1.1vw, .8rem);
+            font-weight: 700;
+            letter-spacing: 6px;
+            color: rgba(255, 255, 255, .4);
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        /* MOBILE */
+        @media(max-width:768px) {
+            .hero-mid {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .prize-left {
+                align-items: center;
+                padding-left: 0;
+                text-align: center;
+            }
+
+            .prize-divider {
+                margin: 8px auto;
+            }
+
+            .entry-right {
+                align-items: center;
+                padding-right: 0;
+            }
+
+            .prize-row {
+                justify-content: center;
+            }
+        }
+
+        .char-glow {
+            position: absolute;
+            bottom: -10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 160%;
+            height: 80%;
+            background: radial-gradient(ellipse, rgba(79, 195, 247, .25) 0%, rgba(2, 136, 209, .15) 30%, transparent 65%);
+            filter: blur(50px);
+            animation: gp 2.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes gp {
+            from {
+                opacity: .4;
+                transform: translateX(-50%) scale(.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) scale(1.1);
+            }
+        }
+
+        .char-img {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(120%);
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: bottom;
+            animation: cr 1.8s cubic-bezier(.22, .61, .36, 1) .3s forwards;
+            opacity: 0;
+            filter: drop-shadow(0 0 25px rgba(79, 195, 247, .5)) drop-shadow(0 0 50px rgba(2, 136, 209, .3));
+        }
+
+        @keyframes cr {
+            0% {
+                transform: translateX(-50%) translateY(120%);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .ep {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #4fc3f7;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #4fc3f7, 0 0 16px #0288d1;
+            animation: epf 3s ease-in-out infinite;
+        }
+
+        @keyframes epf {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: .4;
+            }
+
+            50% {
+                transform: translateY(-25px) scale(1.4);
+                opacity: 1;
+            }
+        }
+
+        .bottom-bar {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 30px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .social-links {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .social-links a {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(.65rem, 1.3vw, .9rem);
+            font-weight: 700;
+            color: rgba(79, 195, 247, .7);
+            text-decoration: none;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            transition: .3s;
+        }
+
+        .social-links a:hover {
+            color: #4fc3f7;
+            transform: translateX(4px);
+        }
+
+        .social-bar {
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 100;
+            align-items: center;
+        }
+
+        .social-tier-2 {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 18px;
+            background: rgba(79, 195, 247, .06);
+            border: 1px solid rgba(79, 195, 247, .25);
+            border-radius: 10px;
+            color: #4fc3f7;
+            text-decoration: none;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 1.5px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(8px);
+        }
+
+        .social-item i {
+            font-size: 1.3rem;
+        }
+
+        .social-item:hover {
+            background: rgba(79, 195, 247, .15);
+            border-color: #4fc3f7;
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(2, 136, 209, 0.3);
+            color: #fff;
+        }
+
+        .social-item.discord {
+            background: rgba(88, 101, 242, 0.1);
+            border-color: rgba(88, 101, 242, 0.3);
+            color: #5865f2;
+        }
+
+        .social-item.discord:hover {
+            background: #5865f2;
+            border-color: #fff;
+            color: #fff;
+        }
+
+        .rules-btn {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(1.8rem, 4vw, 3.2rem);
+            font-weight: 900;
+            color: #4fc3f7;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            background: none;
+            cursor: pointer;
+            border: 3px solid rgba(79, 195, 247, .4);
+            padding: 8px 30px;
+            border-radius: 8px;
+            transition: .3s;
+            text-shadow: 0 0 15px rgba(79, 195, 247, .3);
+        }
+
+        .rules-btn:hover {
+            border-color: #4fc3f7;
+            box-shadow: 0 0 30px rgba(79, 195, 247, .3);
+        }
+
+        .enter-btn {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(.9rem, 1.8vw, 1.2rem);
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #fff;
+            background: linear-gradient(135deg, #0d47a1, #1565c0, #0288d1);
+            border: 2px solid #4fc3f7;
+            padding: 16px 45px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: .3s;
+            clip-path: polygon(6% 0, 100% 0, 94% 100%, 0 100%);
+        }
+
+        .enter-btn:hover {
+            background: linear-gradient(135deg, #4fc3f7, #0288d1);
+            box-shadow: 0 0 35px rgba(79, 195, 247, .4);
+            transform: scale(1.04);
+        }
+
+        .enter-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .15), transparent);
+            animation: sw 3s infinite;
+        }
+
+        @keyframes sw {
+            0% {
+                left: -100%;
+            }
+
+            50%,
+            100% {
+                left: 100%;
+            }
+        }
+
+        /* === PAGE 2 === */
+        #registration {
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+        }
+
+        .reg-header {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(1.3rem, 3.5vw, 2.2rem);
+            font-weight: 800;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #4fc3f7;
+            margin-bottom: 25px;
+            text-align: center;
+            text-shadow: 0 0 15px rgba(79, 195, 247, .3);
+        }
+
+        .reg-layout {
+            width: 100%;
+            max-width: 950px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Team name - blue pill */
+        .tn-pill {
+            width: 100%;
+            max-width: 420px;
+            background: linear-gradient(135deg, rgba(79, 195, 247, .15), rgba(2, 136, 209, .2));
+            border: 2px solid rgba(79, 195, 247, .3);
+            border-radius: 40px;
+            padding: 12px 28px;
+            text-align: center;
+        }
+
+        .tn-pill input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(.9rem, 2vw, 1.2rem);
+            font-weight: 700;
+            color: #fff;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .tn-pill input::placeholder {
+            color: rgba(79, 195, 247, .4);
+        }
+
+        /* Players box - blue */
+        .pbox {
+            width: 100%;
+            max-width: 480px;
+            background: linear-gradient(135deg, rgba(79, 195, 247, .08), rgba(2, 136, 209, .12));
+            border: 2px solid rgba(79, 195, 247, .2);
+            border-radius: 8px;
+            padding: 20px 25px;
+            backdrop-filter: blur(5px);
+        }
+
+        .pbox-title {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(.85rem, 1.8vw, 1.15rem);
+            font-weight: 800;
+            color: #4fc3f7;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .pr {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .pr:last-child {
+            margin-bottom: 0;
+        }
+
+        .pn {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(.9rem, 1.8vw, 1.2rem);
+            font-weight: 800;
+            color: rgba(79, 195, 247, .6);
+            min-width: 28px;
+        }
+
+        .pi {
+            flex: 1;
+            padding: 10px 14px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #fff;
+            background: rgba(79, 195, 247, .06);
+            border: 1px solid rgba(79, 195, 247, .2);
+            border-radius: 6px;
+            outline: none;
+            transition: .3s;
+            letter-spacing: 1px;
+        }
+
+        .pi:focus {
+            background: rgba(79, 195, 247, .12);
+            border-color: #4fc3f7;
+            box-shadow: 0 0 12px rgba(79, 195, 247, .15);
+        }
+
+        .pi::placeholder {
+            color: rgba(79, 195, 247, .3);
+        }
+
+        .reg-bottom {
+            width: 100%;
+            max-width: 950px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* QR - blue border */
+        .qr-box {
+            width: clamp(130px, 18vw, 180px);
+            height: clamp(130px, 18vw, 180px);
+            border: 4px solid rgba(79, 195, 247, .5);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(79, 195, 247, .03);
+            position: relative;
+            box-shadow: 0 0 25px rgba(79, 195, 247, .2), inset 0 0 15px rgba(79, 195, 247, .05);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .qr-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+
+        .reg-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            min-width: 200px;
+        }
+
+        /* Register button - blue */
+        .reg-btn {
+            width: 100%;
+            max-width: 400px;
+            padding: 16px;
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(.9rem, 2vw, 1.15rem);
+            font-weight: 800;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: #fff;
+            background: linear-gradient(135deg, #0d47a1, #1565c0, #0288d1);
+            border: 2px solid rgba(79, 195, 247, .5);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: .3s;
+            box-shadow: 0 0 20px rgba(79, 195, 247, .2);
+        }
+
+        .reg-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 0 35px rgba(79, 195, 247, .4);
+            background: linear-gradient(135deg, #1565c0, #0288d1, #4fc3f7);
+        }
+
+        .reg-btn:disabled {
+            opacity: .3;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .slc {
+            font-family: 'Teko', sans-serif;
+            font-size: 1rem;
+            letter-spacing: 3px;
+            color: rgba(79, 195, 247, .4);
+            text-transform: uppercase;
+        }
+
+        .slc span {
+            color: #4fc3f7;
+            font-weight: 700;
+        }
+
+        /* Payment button - blue */
+        .pay-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .pay-btn {
+            padding: 14px 24px;
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(.55rem, 1.2vw, .75rem);
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #fff;
+            background: linear-gradient(135deg, rgba(79, 195, 247, .15), rgba(2, 136, 209, .2));
+            border: 2px solid rgba(79, 195, 247, .3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: .3s;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .pay-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(79, 195, 247, .25);
+            border-color: #4fc3f7;
+        }
+
+        .pay-btn.ok {
+            background: linear-gradient(135deg, #0288d1, #4fc3f7);
+            border-color: #4fc3f7;
+            box-shadow: 0 0 20px rgba(79, 195, 247, .3);
+        }
+
+        .pay-st {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: .75rem;
+            color: rgba(79, 195, 247, .35);
+            letter-spacing: 1px;
+        }
+
+        .pay-st.done {
+            color: #4fc3f7;
+        }
+
+        #payFile {
+            display: none;
+        }
+
+        .vsl {
+            margin-top: 12px;
+            font-family: 'Orbitron', monospace;
+            font-size: .7rem;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #4fc3f7;
+            background: none;
+            border: 1px solid rgba(79, 195, 247, .25);
+            padding: 8px 22px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: .3s;
+        }
+
+        .vsl:hover {
+            background: rgba(79, 195, 247, .08);
+            border-color: #4fc3f7;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-family: 'Orbitron', monospace;
+            font-size: .65rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: #4fc3f7;
+            background: none;
+            border: 1px solid rgba(79, 195, 247, .25);
+            padding: 7px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: .3s;
+            text-transform: uppercase;
+            z-index: 10;
+        }
+
+        .back-btn:hover {
+            background: rgba(79, 195, 247, .08);
+            border-color: #4fc3f7;
+        }
+
+        /* === PAGE 3 === */
+        #confirmlist {
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+        }
+
+        .ct {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(1.8rem, 5vw, 3.2rem);
+            font-weight: 900;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            color: #4fc3f7;
+            text-shadow: 0 0 20px rgba(79, 195, 247, .4), 0 0 40px rgba(79, 195, 247, .2);
+        }
+
+        /* Blue glowing border */
+        .sgb {
+            border: 3px solid rgba(79, 195, 247, .4);
+            border-radius: 10px;
+            padding: 18px;
+            background: rgba(79, 195, 247, .02);
+            max-width: 1100px;
+            width: 100%;
+            box-shadow: 0 0 30px rgba(79, 195, 247, .1), inset 0 0 30px rgba(79, 195, 247, .03);
+            animation: borderGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes borderGlow {
+            from {
+                box-shadow: 0 0 20px rgba(79, 195, 247, .08), inset 0 0 20px rgba(79, 195, 247, .02);
+                border-color: rgba(79, 195, 247, .3);
+            }
+
+            to {
+                box-shadow: 0 0 40px rgba(79, 195, 247, .15), inset 0 0 40px rgba(79, 195, 247, .04);
+                border-color: rgba(79, 195, 247, .5);
+            }
+        }
+
+        .sg {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .sl {
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: .5s;
+            position: relative;
+            overflow: hidden;
+            min-height: 180px;
+        }
+
+        .sl.empty {
+            background: rgba(79, 195, 247, .05);
+            border: 2px dashed rgba(79, 195, 247, .12);
+        }
+
+        .sl.filled {
+            background: linear-gradient(135deg, rgba(79, 195, 247, .08), rgba(2, 136, 209, .12));
+            border: 2px solid rgba(79, 195, 247, .3);
+            padding: 12px 6px;
+            box-shadow: 0 0 15px rgba(79, 195, 247, .08);
+            min-height: 180px;
+            animation: sp .5s cubic-bezier(.23, 1, .32, 1);
+        }
+
+        @keyframes sp {
+            0% {
+                transform: scale(.6);
+                opacity: 0;
+            }
+
+            70% {
+                transform: scale(1.04);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .sl .sn {
+            font-family: 'Orbitron', monospace;
+            font-size: .75rem;
+            font-weight: 700;
+            color: rgba(79, 195, 247, .45);
+            letter-spacing: 2px;
+            margin-bottom: 2px;
+        }
+
+        .sl .st {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(1rem, 2.2vw, 1.5rem);
+            font-weight: 900;
+            color: #4fc3f7;
+            text-align: center;
+            padding: 0 4px;
+            word-break: break-word;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(79, 195, 247, .3);
+        }
+
+        .sl .sc2 {
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            font-size: .7rem;
+            color: #4fc3f7;
+        }
+
+        .sp-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 8px;
+            width: 100%;
+            padding: 0 8px;
+        }
+
+        .sp {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: clamp(.85rem, 1.6vw, 1.15rem);
+            font-weight: 600;
+            color: rgba(255, 255, 255, .55);
+            letter-spacing: .5px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .fm {
+            display: none;
+            margin-top: 18px;
+            padding: 12px 35px;
+            font-family: 'Orbitron', monospace;
+            font-size: .85rem;
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #4fc3f7;
+            border: 2px solid rgba(79, 195, 247, .4);
+            border-radius: 5px;
+            background: rgba(79, 195, 247, .05);
+            animation: fg 2s infinite;
+        }
+
+        .fm.show {
+            display: block;
+        }
+
+        @keyframes fg {
+
+            0%,
+            100% {
+                box-shadow: 0 0 8px rgba(79, 195, 247, .1);
+            }
+
+            50% {
+                box-shadow: 0 0 25px rgba(79, 195, 247, .25);
+            }
+        }
+
+        /* RULES MODAL */
+        .ov {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, .88);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .ov.show {
+            display: flex;
+        }
+
+        .md {
+            background: linear-gradient(135deg, #060d1a, #0a1628);
+            border: 2px solid rgba(79, 195, 247, .25);
+            border-radius: 14px;
+            padding: 30px;
+            max-width: 1000px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .rules-wrapper {
+            display: flex;
+            gap: 30px;
+            flex-direction: row-reverse;
+            align-items: flex-start;
+        }
+
+        .rules-content {
+            flex: 1;
+        }
+
+        .md h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #4fc3f7;
+            letter-spacing: 4px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(79, 195, 247, .3);
+        }
+
+        .rule-section {
+            margin-bottom: 18px;
+            padding: 14px 16px;
+            background: rgba(79, 195, 247, .04);
+            border: 1px solid rgba(79, 195, 247, .12);
+            border-radius: 8px;
+        }
+
+        .rule-title {
+            font-family: 'Orbitron', monospace;
+            font-size: .7rem;
+            font-weight: 700;
+            color: #4fc3f7;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rule-title::before {
+            content: '';
+            display: block;
+            width: 3px;
+            height: 14px;
+            background: #4fc3f7;
+            border-radius: 2px;
+        }
+
+        .rule-text {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: .95rem;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, .7);
+        }
+
+        .rule-text strong {
+            color: #4fc3f7;
+            font-weight: 700;
+        }
+
+        .rule-text .warn {
+            color: rgba(79, 195, 247, .8);
+            font-weight: 600;
+        }
+
+        .mc {
+            position: absolute;
+            top: 12px;
+            right: 18px;
+            font-size: 1.4rem;
+            color: #4fc3f7;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: .3s;
+            z-index: 10;
+        }
+
+        .mc:hover {
+            transform: rotate(90deg);
+        }
+
+        .disclaimer-box {
+            width: 300px;
+            background: rgba(13, 71, 161, 0.4);
+            border: 1px solid rgba(79, 195, 247, 0.2);
+            padding: 15px;
+            border-radius: 12px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.5;
+            text-align: left;
+            backdrop-filter: blur(5px);
+            flex-shrink: 0;
+        }
+
+        .disclaimer-title {
+            font-family: 'Orbitron', monospace;
+            font-weight: 800;
+            color: #4fc3f7;
+            display: block;
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+            font-size: 0.75rem;
+        }
+
+        @media(max-width: 900px) {
+            .rules-wrapper {
+                flex-direction: column;
+            }
+
+            .disclaimer-box {
+                width: 100%;
+                margin-bottom: 25px;
+            }
+        }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            padding: 14px 26px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, #0277bd, #0288d1);
+            border: 1px solid #4fc3f7;
+            border-radius: 8px;
+            box-shadow: 0 4px 25px rgba(79, 195, 247, .25);
+            z-index: 200;
+            transform: translateX(130%);
+            transition: transform .35s cubic-bezier(.23, 1, .32, 1);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.err {
+            background: linear-gradient(135deg, #01579b, #0277bd);
+            border-color: #29b6f6;
+        }
+
+        @media(max-width:768px) {
+            .social-bar {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                align-items: center;
+                margin: 20px auto;
+            }
+
+            .social-tier-2 {
+                justify-content: center;
+            }
+
+            .reg-bottom {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .sg {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media(max-width:480px) {
+            .sg {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* MATCH SCHEDULE BAR */
+        .match-schedule {
+            width: 100%;
+            max-width: 540px;
+            background: linear-gradient(135deg, rgba(79, 195, 247, .06), rgba(2, 136, 209, .1));
+            border: 2px solid rgba(79, 195, 247, .25);
+            border-radius: 12px;
+            padding: 20px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 28px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(79, 195, 247, .06);
+            flex-wrap: wrap;
+        }
+
+        .match-schedule::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(79, 195, 247, .06), transparent);
+            animation: schedSweep 4s infinite;
+        }
+
+        @keyframes schedSweep {
+            0% {
+                left: -100%;
+            }
+
+            50%,
+            100% {
+                left: 100%;
+            }
+        }
+
+        .sched-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sched-icon {
+            font-size: 1.5rem;
+            color: #4fc3f7;
+            filter: drop-shadow(0 0 6px rgba(79, 195, 247, .5));
+        }
+
+        .sched-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sched-label {
+            font-family: 'Orbitron', monospace;
+            font-size: .5rem;
+            font-weight: 600;
+            letter-spacing: 3px;
+            color: rgba(79, 195, 247, .45);
+            text-transform: uppercase;
+        }
+
+        .sched-value {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(.9rem, 2vw, 1.25rem);
+            font-weight: 800;
+            color: #4fc3f7;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(79, 195, 247, .3);
+        }
+
+        .sched-divider {
+            width: 2px;
+            height: 38px;
+            background: linear-gradient(180deg, transparent, rgba(79, 195, 247, .25), transparent);
+            border-radius: 1px;
+        }
+
+        .sched-live {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            background: rgba(79, 195, 247, .1);
+            border: 1px solid rgba(79, 195, 247, .3);
+        }
+
+        .sched-live.active {
+            display: flex;
+        }
+
+        .sched-live-dot {
+            width: 7px;
+            height: 7px;
+            background: #4fc3f7;
+            border-radius: 50%;
+            animation: livePulse2 1s infinite;
+            box-shadow: 0 0 8px #4fc3f7;
+        }
+
+        @keyframes livePulse2 {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .3;
+            }
+        }
+
+        .sched-live-text {
+            font-family: 'Orbitron', monospace;
+            font-size: .55rem;
+            font-weight: 700;
+            color: #4fc3f7;
+            letter-spacing: 3px;
+        }
+
+        .no-schedule {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: .95rem;
+            color: rgba(79, 195, 247, .3);
+            font-style: italic;
+            text-align: center;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="starfield"><canvas id="sc"></canvas></div>
+    <div class="streaks"></div>
+
+    <!-- PAGE 1 -->
+    <div id="landing" class="page active">
+        <div class="social-bar">
+            <a href="https://discord.gg/VrXm7wWK8p" target="_blank" class="social-item discord" title="Discord">
+                <i class="fab fa-discord"></i><span>DISCORD</span>
+            </a>
+            <div class="social-tier-2">
+                <a href="https://youtube.com/@aj.comrade?si=9VLvJpKsL2Io6tYJ" target="_blank" class="social-item"
+                    title="YouTube">
+                    <i class="fab fa-youtube"></i><span>YOUTUBE</span>
+                </a>
+                <a href="https://www.instagram.com/aj.comrade_?igsh=MTVsNHQ3dGNka2RmNA==" target="_blank"
+                    class="social-item" title="Instagram">
+                    <i class="fab fa-instagram"></i><span>INSTAGRAM</span>
+                </a>
+            </div>
+        </div>
+        <img class="logo-img" src="CCL LOGO.png" alt="CCL Logo">
+        <h1 class="main-title">COMRADE CHAMPION LEAGUE</h1>
+        <p class="sub-title">SKILL DEFINE THE CHAMPIONS</p>
+        <!-- HERO MID: Prize + Character + Entry -->
+        <div class="hero-mid">
+
+            <!-- LEFT: Prize Pool -->
+            <div class="prize-left">
+                <span class="prize-pool-label">TOTAL PRIZE POOL</span>
+                <div class="prize-pool-amount"><span class="rupee">&#8377;</span>350</div>
+                <div class="prize-divider"></div>
+                <div class="prize-breakdown">
+                    <div class="prize-row prize-1st"><span class="prize-pos">1<sup>ST</sup></span><span
+                            class="prize-label">PRIZE</span><span class="prize-dash">—</span><span
+                            class="prize-val"><span class="rupee">&#8377;</span>200</span></div>
+                    <div class="prize-row prize-2nd"><span class="prize-pos">2<sup>ND</sup></span><span
+                            class="prize-label">PRIZE</span><span class="prize-dash">—</span><span
+                            class="prize-val"><span class="rupee">&#8377;</span>100</span></div>
+                    <div class="prize-row prize-3rd"><span class="prize-pos">3<sup>RD</sup></span><span
+                            class="prize-label">PRIZE</span><span class="prize-dash">—</span><span
+                            class="prize-val"><span class="rupee">&#8377;</span>50</span></div>
+                </div>
+            </div>
+
+            <!-- CENTER: Character -->
+            <div class="char-center">
+                <div class="char-area">
+                    <div class="char-glow"></div>
+                    <img class="char-img" src="CHARACTER PNG.png" alt="Character">
+                    <div class="ep" style="left:28%;top:38%"></div>
+                    <div class="ep" style="left:67%;top:33%;animation-delay:.6s"></div>
+                    <div class="ep" style="left:42%;top:52%;animation-delay:1.1s"></div>
+                    <div class="ep" style="left:72%;top:58%;animation-delay:1.6s"></div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Entry Fee -->
+            <div class="entry-right">
+                <div class="entry-box">
+                    <div class="entry-amount">&#8377;40</div>
+                    <div class="entry-label">ENTRY</div>
+                </div>
+            </div>
+
+        </div>
+
+
+        <button class="enter-btn" onclick="goTo('registration')">ENTER TOURNAMENT</button>
+        <div class="bottom-bar">
+            <div class="social-links"></div>
+            <button class="rules-btn" onclick="openRules()">RULES</button>
+        </div>
+    </div>
+
+    <!-- PAGE 2 -->
+    <div id="registration" class="page">
+        <button class="back-btn" onclick="goTo('landing')">&#8592; BACK</button>
+        <h2 class="reg-header">TOURNAMENT REGISTRATION</h2>
+        <div class="reg-layout">
+            <div class="match-schedule" id="matchSchedule">
+                <span class="no-schedule" id="noSched">Match schedule will be announced soon</span>
+                <div class="sched-item" id="schedDateEl" style="display:none">
+                    <span class="sched-icon">&#128197;</span>
+                    <div class="sched-info">
+                        <span class="sched-label">DATE</span>
+                        <span class="sched-value" id="schedDateVal">—</span>
+                    </div>
+                </div>
+                <div class="sched-divider" id="schedDiv" style="display:none"></div>
+                <div class="sched-item" id="schedTimeEl" style="display:none">
+                    <span class="sched-icon">&#9201;</span>
+                    <div class="sched-info">
+                        <span class="sched-label">TIME</span>
+                        <span class="sched-value" id="schedTimeVal">—</span>
+                    </div>
+                </div>
+                <div class="sched-divider" id="schedDiv2" style="display:none"></div>
+                <div class="sched-live" id="schedLiveEl">
+                    <span class="sched-live-dot"></span>
+                    <span class="sched-live-text">LIVE</span>
+                </div>
+            </div>
+            <div class="tn-pill"><input type="text" id="teamName" placeholder="TEAM NAME" maxlength="30"></div>
+            <div class="pbox">
+                <div class="pbox-title">PLAYER NAME</div>
+                <div class="pr"><span class="pn">1</span><input class="pi" id="p1" placeholder="Player 1"
+                        maxlength="25"></div>
+                <div class="pr"><span class="pn">2</span><input class="pi" id="p2" placeholder="Player 2"
+                        maxlength="25"></div>
+                <div class="pr"><span class="pn">3</span><input class="pi" id="p3" placeholder="Player 3"
+                        maxlength="25"></div>
+                <div class="pr"><span class="pn">4</span><input class="pi" id="p4" placeholder="Player 4"
+                        maxlength="25"></div>
+            </div>
+            <div class="reg-bottom">
+                <div class="qr-box">
+                    <img class="qr-img" src="PAYMENT QR.jpg.jpeg" alt="Payment QR">
+                </div>
+                <div class="reg-center">
+                    <button class="reg-btn" id="regBtn" disabled onclick="registerTeam()">REGISTER</button>
+                    <span class="slc">SLOTS: <span id="slotsLeft">12</span> / 12</span>
+                    <button class="vsl" onclick="goTo('confirmlist')">VIEW CONFIRM LIST</button>
+                </div>
+                <div class="pay-box">
+                    <button class="pay-btn" id="payBtn"
+                        onclick="document.getElementById('payFile').click()">PAYMENT<br>SCREENSHOT</button>
+                    <span class="pay-st" id="paySt">No file uploaded</span>
+                    <input type="file" id="payFile" accept="image/*" onchange="handlePay(this)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 3 -->
+    <div id="confirmlist" class="page">
+        <button class="back-btn" onclick="goTo('registration')">&#8592; BACK</button>
+        <h2 class="ct">CONFIRM LIST</h2>
+        <div class="sgb">
+            <div class="sg" id="sGrid"></div>
+        </div>
+        <div class="fm" id="fullMsg">&#9889; ALL SLOTS FILLED &#8212; REGISTRATION CLOSED &#9889;</div>
+        <button class="back-btn" style="position:relative;top:auto;left:auto;margin-top:22px;"
+            onclick="goTo('registration')">BACK TO REGISTRATION</button>
+    </div>
+
+    <!-- RULES MODAL -->
+    <div class="ov" id="rulesOv">
+        <div class="md">
+            <button class="mc" onclick="closeRules()">&#10005;</button>
+            <div class="rules-wrapper">
+                <div class="disclaimer-box">
+                    <span class="disclaimer-title">DISCLAIMER</span>
+                    This website is created solely for organizing and managing online gaming tournaments.
+                    We do not support, promote, or engage in any kind of money cheating, financial fraud, gambling, or
+                    illegal
+                    gaming activities.
+                    All entry fees collected are used only for tournament management and prize pool distribution as
+                    announced.
+                    We do not guarantee any fixed income, profit, or monetary return to participants.
+                    Any fraudulent activity, fake payments, chargebacks, hacking, or unfair practices from participants
+                    will
+                    result
+                    in strict action and permanent disqualification.
+                    We are not responsible for technical issues such as internet failure, device malfunction, power
+                    cuts, or
+                    server-related problems from the player's side.
+                    Once payment is made, it is non-refundable unless officially announced by the management.
+                    All game names, logos, and trademarks belong to their respective owners. We are not affiliated with
+                    any
+                    official
+                    game developers or publishers.
+                    The management reserves the right to modify rules, cancel, reschedule, or suspend tournaments if
+                    necessary to
+                    maintain fairness and security.
+                    By participating in our tournaments or using this website, you agree to comply with all the rules,
+                    policies,
+                    and
+                    fair-play guidelines mentioned here.
+                </div>
+                <div class="rules-content">
+                    <h2>&#9889; RULES</h2>
+
+                    <div class="rule-section">
+                        <div class="rule-title">MINIMUM LEVEL</div>
+                        <div class="rule-text">Minimum Level required: <strong>40</strong><br><span class="warn">Avoid
+                                using any
+                                kind
+                                of
+                                hack or panel.</span></div>
+                    </div>
+
+                    <div class="rule-section">
+                        <div class="rule-title">SQUAD RULES</div>
+                        <div class="rule-text">Maximum: <strong>1 PC + 3 Mobile</strong> players allowed.<br><span
+                                class="warn">More
+                                than 1 PC player is NOT allowed.</span></div>
+                    </div>
+
+                    <div class="rule-section">
+                        <div class="rule-title">HACK / PANEL DETECTION</div>
+                        <div class="rule-text">If hack/panel is detected &#8594; <strong>Direct
+                                Disqualification.</strong><br>If
+                            there
+                            is any doubt, we will call for <strong>Discord checking.</strong><br>Players must join
+                            Discord and show
+                            proper
+                            proof.<br><span class="warn">If you fail to join Discord &#8594; Team will be
+                                Disqualified.</span></div>
+                    </div>
+
+                    <div class="rule-section">
+                        <div class="rule-title">PAYMENT &amp; MATCH RULES</div>
+                        <div class="rule-text"><strong>No refund</strong> after payment.<br>Match will start at the
+                            <strong>announced
+                                time.</strong><br><span class="warn">If your team does not join on time &#8594; Direct
+                                Disqualification.</span>
+                        </div>
+                    </div>
+
+                    <div class="rule-section">
+                        <div class="rule-title">ROOM ID &amp; PASSWORD</div>
+                        <div class="rule-text">Room ID &amp; Password will be updated on <strong>Discord</strong> at the
+                            sharp
+                            time.<br>Joining Discord is <strong>compulsory.</strong><br>After joining, <strong>tag the
+                                Admin</strong>
+                            and
+                            send a message.<br><span class="warn">Admin will provide the required role.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API = window.location.origin + '/api', MAX = 12;
+        let teams = [], payOk = false;
+
+        async function fetchTeams() {
+            try {
+                const r = await fetch(API + '/teams');
+                const d = await r.json();
+                teams = d.teams;
+                return d;
+            } catch (e) {
+                teams = JSON.parse(localStorage.getItem('cclTeams') || '[]');
+                return { teams, maxSlots: MAX, slotsLeft: MAX - teams.length };
+            }
+        }
+
+        async function goTo(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            scrollTo(0, 0);
+            await fetchTeams();
+            if (id === 'confirmlist') renderSlots();
+            if (id === 'registration') { updateCount(); checkFull(); }
+        }
+
+        function handlePay(inp) {
+            if (inp.files && inp.files[0]) {
+                payOk = true;
+                document.getElementById('payBtn').classList.add('ok');
+                document.getElementById('payBtn').innerHTML = '&#10003; UPLOADED';
+                const s = document.getElementById('paySt');
+                s.textContent = '&#10003; ' + inp.files[0].name;
+                s.classList.add('done');
+                checkReady();
+            }
+        }
+
+        function checkReady() {
+            document.getElementById('regBtn').disabled = !(payOk && teams.length < MAX);
+        }
+
+        function updateCount() {
+            document.getElementById('slotsLeft').textContent = MAX - teams.length;
+        }
+
+        function checkFull() {
+            const b = document.getElementById('regBtn');
+            if (teams.length >= MAX) {
+                b.disabled = true;
+                b.textContent = 'SLOTS FULL';
+            } else {
+                b.textContent = 'REGISTER';
+                checkReady();
+            }
+        }
+
+        async function registerTeam() {
+            if (!payOk) { toast('Upload payment screenshot first!', 1); return; }
+            if (teams.length >= MAX) { toast('ALL SLOTS FILLED!', 1); return; }
+            const tn = document.getElementById('teamName').value.trim();
+            const pl = ['p1', 'p2', 'p3', 'p4'].map(id => document.getElementById(id).value.trim());
+            if (!tn) { toast('Enter team name!', 1); return; }
+            if (pl.some(p => !p)) { toast('All 4 player names required!', 1); return; }
+            // Read payment screenshot as base64
+            let paymentScreenshot = null;
+            const payFile = document.getElementById('payFile');
+            if (payFile && payFile.files && payFile.files[0]) {
+                paymentScreenshot = await new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = e => resolve(e.target.result);
+                    reader.readAsDataURL(payFile.files[0]);
+                });
+            }
+            try {
+                const r = await fetch(API + '/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ teamName: tn, players: pl, paymentScreenshot })
+                });
+                const d = await r.json();
+                if (!r.ok) { toast(d.error || 'Registration failed!', 1); return; }
+                teams.push(d.team);
+                localStorage.setItem('cclTeams', JSON.stringify(teams));
+            } catch (e) {
+                if (teams.some(t => t.name.toLowerCase() === tn.toLowerCase())) {
+                    toast('Team name taken!', 1); return;
+                }
+                teams.push({ id: Date.now().toString(), name: tn, players: pl, slot: teams.length + 1 });
+                localStorage.setItem('cclTeams', JSON.stringify(teams));
+            }
+            document.getElementById('teamName').value = '';
+            ['p1', 'p2', 'p3', 'p4'].forEach(id => document.getElementById(id).value = '');
+            payOk = false;
+            const pb = document.getElementById('payBtn');
+            pb.classList.remove('ok');
+            pb.innerHTML = 'PAYMENT<br>SCREENSHOT';
+            const ps = document.getElementById('paySt');
+            ps.textContent = 'No file uploaded';
+            ps.classList.remove('done');
+            document.getElementById('payFile').value = '';
+            updateCount();
+            checkFull();
+            toast('\u2713 TEAM "' + tn.toUpperCase() + '" \u2014 SLOT #' + teams.length + ' CONFIRMED!');
+            setTimeout(() => goTo('confirmlist'), 1500);
+        }
+
+        function renderSlots() {
+            const g = document.getElementById('sGrid');
+            g.innerHTML = '';
+            for (let i = 0; i < MAX; i++) {
+                const d = document.createElement('div');
+                d.className = 'sl';
+                if (teams[i]) {
+                    d.classList.add('filled');
+                    d.style.animationDelay = (i * .08) + 's';
+                    let ph = '';
+                    teams[i].players.forEach((p, j) => {
+                        ph += '<span class="sp">P' + (j + 1) + ': ' + p + '</span>';
+                    });
+                    d.innerHTML = '<span class="sc2">&#10003;</span><span class="sn">SLOT #' + (i + 1) + '</span><span class="st">' + teams[i].name + '</span><div class="sp-wrap">' + ph + '</div>';
+                } else {
+                    d.classList.add('empty');
+                }
+                g.appendChild(d);
+            }
+            document.getElementById('fullMsg').classList.toggle('show', teams.length >= MAX);
+        }
+
+        function toast(m, e) {
+            const t = document.getElementById('toast');
+            t.textContent = m;
+            t.className = 'toast' + (e ? ' err' : '');
+            setTimeout(() => t.classList.add('show'), 10);
+            setTimeout(() => t.classList.remove('show'), 3500);
+        }
+
+        function openRules() { document.getElementById('rulesOv').classList.add('show'); }
+        function closeRules() { document.getElementById('rulesOv').classList.remove('show'); }
+
+        // STARFIELD
+        (function () {
+            const c = document.getElementById('sc'), x = c.getContext('2d');
+            let s = [];
+            function r() {
+                c.width = innerWidth; c.height = innerHeight; s = [];
+                const n = Math.floor(c.width * c.height / 2200);
+                for (let i = 0; i < n; i++) s.push({
+                    x: Math.random() * c.width,
+                    y: Math.random() * c.height,
+                    r: Math.random() * 1.8 + .3,
+                    spd: Math.random() * .005 + .002,
+                    ph: Math.random() * Math.PI * 2,
+                    col: Math.random() > .7 ? '79,195,247' : '255,255,255'
+                });
+            }
+            function d() {
+                x.clearRect(0, 0, c.width, c.height);
+                const t = Date.now() / 1000;
+                for (const p of s) {
+                    const a = .3 + .7 * (.5 + .5 * Math.sin(t * p.spd * 60 + p.ph));
+                    x.beginPath(); x.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    x.fillStyle = 'rgba(' + p.col + ',' + a + ')'; x.fill();
+                }
+                requestAnimationFrame(d);
+            }
+            addEventListener('resize', r); r(); d();
+        })();
+
+        document.getElementById('rulesOv').addEventListener('click', function (e) { if (e.target === this) closeRules(); });
+        setInterval(async () => {
+            const p = document.querySelector('.page.active');
+            if (p && (p.id === 'confirmlist' || p.id === 'registration')) {
+                await fetchTeams();
+                if (p.id === 'confirmlist') renderSlots();
+                if (p.id === 'registration') { updateCount(); checkFull(); }
+            }
+        }, 5000);
+
+        (async () => { await fetchTeams(); updateCount(); checkFull(); })();
+        // ── MATCH SCHEDULE ──
+        function updateScheduleUI(s) {
+            const hasDate = s && s.date;
+            const hasTime = s && s.time;
+            if (!hasDate && !hasTime) {
+                document.getElementById('noSched').style.display = 'block';
+                document.getElementById('schedDateEl').style.display = 'none';
+                document.getElementById('schedDiv').style.display = 'none';
+                document.getElementById('schedTimeEl').style.display = 'none';
+                document.getElementById('schedDiv2').style.display = 'none';
+                document.getElementById('schedLiveEl').classList.remove('active');
+                return;
+            }
+            document.getElementById('noSched').style.display = 'none';
+            if (hasDate) { document.getElementById('schedDateEl').style.display = 'flex'; document.getElementById('schedDateVal').textContent = s.date; }
+            if (hasTime) { document.getElementById('schedDiv').style.display = 'block'; document.getElementById('schedTimeEl').style.display = 'flex'; document.getElementById('schedTimeVal').textContent = s.time; }
+            if (s.isLive) { document.getElementById('schedDiv2').style.display = 'block'; document.getElementById('schedLiveEl').classList.add('active'); }
+            else { document.getElementById('schedDiv2').style.display = 'none'; document.getElementById('schedLiveEl').classList.remove('active'); }
+        }
+        async function fetchSchedule() {
+            try { const r = await fetch(API + '/schedule'); const d = await r.json(); updateScheduleUI(d.schedule); } catch (e) { }
+        }
+        fetchSchedule();
+        setInterval(fetchSchedule, 10000);
+    </script>
+</body>
+
+</html>

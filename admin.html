@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCL Admin Panel</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background: radial-gradient(ellipse at 50% 30%, #0a1a3a, #040e1f 50%, #020810 80%, #000);
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    /* ── LOGIN ── */
+    #loginWrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    #loginBox {
+      background: linear-gradient(135deg, rgba(79, 195, 247, .06), rgba(2, 136, 209, .08));
+      border: 1px solid rgba(79, 195, 247, .2);
+      border-radius: 14px;
+      padding: 40px 35px;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+
+    #loginBox h2 {
+      font-family: 'Orbitron', monospace;
+      color: #4fc3f7;
+      font-size: 1rem;
+      letter-spacing: 3px;
+      margin-bottom: 6px;
+    }
+
+    #loginBox p {
+      color: rgba(79, 195, 247, .4);
+      font-size: .75rem;
+      letter-spacing: 2px;
+      margin-bottom: 24px;
+    }
+
+    #loginBox input {
+      width: 100%;
+      padding: 11px 15px;
+      background: rgba(79, 195, 247, .05);
+      border: 1px solid rgba(79, 195, 247, .25);
+      border-radius: 7px;
+      color: #fff;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      margin-bottom: 14px;
+      transition: .3s;
+    }
+
+    #loginBox input:focus {
+      border-color: #4fc3f7;
+      box-shadow: 0 0 12px rgba(79, 195, 247, .15);
+    }
+
+    #loginBox button {
+      width: 100%;
+      padding: 11px;
+      font-family: 'Orbitron', monospace;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, #0288d1, #4fc3f7);
+      color: #000;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: .3s;
+    }
+
+    #loginBox button:hover {
+      box-shadow: 0 0 20px rgba(79, 195, 247, .3);
+    }
+
+    #loginErr {
+      color: #ef5350;
+      font-size: .8rem;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* ── ADMIN ── */
+    .admin {
+      display: none;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .admin-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid rgba(79, 195, 247, .1);
+    }
+
+    .admin-bar h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(.9rem, 2.5vw, 1.3rem);
+      color: #4fc3f7;
+      letter-spacing: 4px;
+      text-shadow: 0 0 15px rgba(79, 195, 247, .3);
+    }
+
+    .live-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #4fc3f7;
+      border-radius: 50%;
+      margin-left: 10px;
+      animation: livePulse 1.5s infinite;
+      box-shadow: 0 0 8px #4fc3f7;
+      vertical-align: middle;
+    }
+
+    @keyframes livePulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        box-shadow: 0 0 8px #4fc3f7;
+      }
+
+      50% {
+        opacity: .3;
+        box-shadow: 0 0 2px #4fc3f7;
+      }
+    }
+
+    .admin-btns {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .ab {
+      padding: 8px 16px;
+      font-family: 'Orbitron', monospace;
+      font-size: .55rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: .3s;
+      text-transform: uppercase;
+    }
+
+    .ab-view {
+      background: rgba(79, 195, 247, .1);
+      color: #4fc3f7;
+      border: 1px solid rgba(79, 195, 247, .25) !important;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .ab-view:hover {
+      background: rgba(79, 195, 247, .2);
+    }
+
+    .ab-refresh {
+      background: linear-gradient(135deg, #0288d1, #4fc3f7);
+      color: #000;
+    }
+
+    .ab-refresh:hover {
+      box-shadow: 0 2px 15px rgba(79, 195, 247, .3);
+    }
+
+    .ab-clear {
+      background: rgba(79, 195, 247, .08);
+      color: #64b5f6;
+      border: 1px solid rgba(79, 195, 247, .2) !important;
+    }
+
+    .ab-clear:hover {
+      background: rgba(79, 195, 247, .15);
+      color: #fff;
+    }
+
+    /* Schedule */
+    .sched-ctrl {
+      margin-bottom: 25px;
+      background: linear-gradient(135deg, rgba(79, 195, 247, .04), rgba(2, 136, 209, .06));
+      border: 1px solid rgba(79, 195, 247, .15);
+      border-radius: 10px;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .sched-ctrl h3 {
+      font-family: 'Orbitron', monospace;
+      font-size: .65rem;
+      color: #4fc3f7;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .sched-input {
+      padding: 8px 14px;
+      font-family: 'Orbitron', monospace;
+      font-size: .75rem;
+      font-weight: 700;
+      background: rgba(79, 195, 247, .06);
+      border: 1px solid rgba(79, 195, 247, .2);
+      border-radius: 5px;
+      color: #fff;
+      outline: none;
+      letter-spacing: 1px;
+      transition: .3s;
+      width: 180px;
+    }
+
+    .sched-input:focus {
+      border-color: #4fc3f7;
+      box-shadow: 0 0 10px rgba(79, 195, 247, .1);
+    }
+
+    .sched-input::placeholder {
+      color: rgba(79, 195, 247, .3);
+    }
+
+    .sched-live-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .sched-live-toggle input {
+      display: none;
+    }
+
+    .sched-toggle-track {
+      width: 36px;
+      height: 20px;
+      border-radius: 10px;
+      background: rgba(79, 195, 247, .12);
+      border: 1px solid rgba(79, 195, 247, .2);
+      position: relative;
+      transition: .3s;
+    }
+
+    .sched-toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(79, 195, 247, .4);
+      transition: .3s;
+    }
+
+    .sched-live-toggle input:checked+.sched-toggle-track {
+      background: rgba(79, 195, 247, .25);
+      border-color: #4fc3f7;
+    }
+
+    .sched-live-toggle input:checked+.sched-toggle-track::after {
+      left: 18px;
+      background: #4fc3f7;
+      box-shadow: 0 0 8px rgba(79, 195, 247, .5);
+    }
+
+    .sched-toggle-label {
+      font-family: 'Orbitron', monospace;
+      font-size: .5rem;
+      font-weight: 700;
+      color: rgba(79, 195, 247, .5);
+      letter-spacing: 2px;
+    }
+
+    .btn-sched {
+      padding: 8px 18px;
+      font-family: 'Orbitron', monospace;
+      font-size: .5rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: .3s;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #0288d1, #4fc3f7);
+      color: #000;
+    }
+
+    .btn-sched:hover {
+      box-shadow: 0 2px 10px rgba(79, 195, 247, .3);
+    }
+
+    .btn-sched-clear {
+      padding: 8px 18px;
+      font-family: 'Orbitron', monospace;
+      font-size: .5rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      border: 1px solid rgba(79, 195, 247, .15);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: .3s;
+      text-transform: uppercase;
+      background: rgba(79, 195, 247, .08);
+      color: #64b5f6;
+    }
+
+    .btn-sched-clear:hover {
+      background: rgba(79, 195, 247, .15);
+    }
+
+    /* Stats */
+    .stats {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      background: linear-gradient(135deg, rgba(79, 195, 247, .06), rgba(2, 136, 209, .08));
+      border: 1px solid rgba(79, 195, 247, .15);
+      border-radius: 10px;
+      padding: 15px 25px;
+      text-align: center;
+      flex: 1;
+      min-width: 100px;
+      transition: .3s;
+    }
+
+    .stat-n {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #4fc3f7;
+      text-shadow: 0 0 10px rgba(79, 195, 247, .3);
+    }
+
+    .stat-l {
+      font-size: .7rem;
+      letter-spacing: 2px;
+      color: rgba(79, 195, 247, .5);
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+
+    /* Team Grid */
+    .tg {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 15px;
+    }
+
+    .tc {
+      background: linear-gradient(135deg, rgba(79, 195, 247, .04), rgba(2, 136, 209, .06));
+      border: 1px solid rgba(79, 195, 247, .15);
+      border-radius: 10px;
+      padding: 18px;
+      transition: .3s;
+    }
+
+    .tc:hover {
+      border-color: rgba(79, 195, 247, .35);
+      box-shadow: 0 0 20px rgba(79, 195, 247, .08);
+    }
+
+    .tc.new-team {
+      animation: newFlash 2s ease-out;
+    }
+
+    @keyframes newFlash {
+      0% {
+        border-color: #4fc3f7;
+        box-shadow: 0 0 35px rgba(79, 195, 247, .4);
+        background: rgba(79, 195, 247, .08);
+      }
+
+      100% {
+        border-color: rgba(79, 195, 247, .15);
+        box-shadow: none;
+        background: linear-gradient(135deg, rgba(79, 195, 247, .04), rgba(2, 136, 209, .06));
+      }
+    }
+
+    .tc-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .tc-slot {
+      font-family: 'Orbitron', monospace;
+      font-size: .6rem;
+      color: rgba(79, 195, 247, .45);
+      letter-spacing: 2px;
+    }
+
+    .tc-time {
+      font-size: .65rem;
+      color: rgba(79, 195, 247, .25);
+    }
+
+    .tc-name-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+
+    .tc-name-row label {
+      font-family: 'Orbitron', monospace;
+      font-size: .5rem;
+      color: rgba(79, 195, 247, .4);
+      letter-spacing: 1px;
+      min-width: 40px;
+    }
+
+    .tc-name-row input {
+      flex: 1;
+      padding: 8px 12px;
+      font-family: 'Orbitron', monospace;
+      font-size: .85rem;
+      font-weight: 700;
+      background: rgba(79, 195, 247, .06);
+      border: 1px solid rgba(79, 195, 247, .2);
+      border-radius: 5px;
+      color: #fff;
+      outline: none;
+      letter-spacing: 1px;
+      transition: .3s;
+    }
+
+    .tc-name-row input:focus {
+      border-color: #4fc3f7;
+      box-shadow: 0 0 10px rgba(79, 195, 247, .1);
+    }
+
+    .tc-players {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .tc-pr {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tc-pr label {
+      font-family: 'Orbitron', monospace;
+      font-size: .55rem;
+      color: rgba(79, 195, 247, .35);
+      min-width: 22px;
+      letter-spacing: 1px;
+    }
+
+    .tc-pr input {
+      flex: 1;
+      padding: 7px 10px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: .95rem;
+      font-weight: 600;
+      background: rgba(79, 195, 247, .04);
+      border: 1px solid rgba(79, 195, 247, .12);
+      border-radius: 4px;
+      color: rgba(255, 255, 255, .85);
+      outline: none;
+      transition: .3s;
+    }
+
+    .tc-pr input:focus {
+      border-color: rgba(79, 195, 247, .4);
+      background: rgba(79, 195, 247, .08);
+    }
+
+    .tc-pay {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 10px 12px;
+      background: rgba(79, 195, 247, .04);
+      border: 1px solid rgba(79, 195, 247, .1);
+      border-radius: 6px;
+    }
+
+    .tc-pay-thumb {
+      width: 60px;
+      height: 60px;
+      border-radius: 4px;
+      border: 1px solid rgba(79, 195, 247, .2);
+      overflow: hidden;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: .3s;
+      background: rgba(79, 195, 247, .06);
+    }
+
+    .tc-pay-thumb:hover {
+      border-color: #4fc3f7;
+      box-shadow: 0 0 12px rgba(79, 195, 247, .2);
+      transform: scale(1.05);
+    }
+
+    .tc-pay-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .tc-pay-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .tc-pay-label {
+      font-family: 'Orbitron', monospace;
+      font-size: .5rem;
+      color: rgba(79, 195, 247, .4);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .tc-pay-status {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: .85rem;
+      font-weight: 600;
+    }
+
+    .tc-pay-status.verified {
+      color: #4fc3f7;
+    }
+
+    .tc-pay-status.pending {
+      color: rgba(79, 195, 247, .5);
+    }
+
+    .no-ss {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: .8rem;
+      color: rgba(79, 195, 247, .2);
+      font-style: italic;
+    }
+
+    .btn-verify {
+      padding: 6px 14px;
+      font-family: 'Orbitron', monospace;
+      font-size: .5rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: .3s;
+      text-transform: uppercase;
+    }
+
+    .btn-verify.do-verify {
+      background: linear-gradient(135deg, #0288d1, #4fc3f7);
+      color: #000;
+    }
+
+    .btn-verify.do-verify:hover {
+      box-shadow: 0 2px 10px rgba(79, 195, 247, .3);
+    }
+
+    .btn-verify.undo-verify {
+      background: rgba(79, 195, 247, .08);
+      color: #64b5f6;
+      border: 1px solid rgba(79, 195, 247, .15) !important;
+    }
+
+    .btn-verify.undo-verify:hover {
+      background: rgba(79, 195, 247, .15);
+    }
+
+    .tc-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tc-btns button {
+      flex: 1;
+      padding: 8px;
+      font-family: 'Orbitron', monospace;
+      font-size: .55rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: .3s;
+      text-transform: uppercase;
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, #0288d1, #4fc3f7);
+      color: #000;
+    }
+
+    .btn-save:hover {
+      box-shadow: 0 2px 15px rgba(79, 195, 247, .3);
+    }
+
+    .btn-del {
+      background: rgba(79, 195, 247, .06);
+      color: #64b5f6;
+      border: 1px solid rgba(79, 195, 247, .15) !important;
+    }
+
+    .btn-del:hover {
+      background: rgba(79, 195, 247, .12);
+      color: #fff;
+    }
+
+    .empty {
+      font-family: 'Orbitron', monospace;
+      color: rgba(79, 195, 247, .25);
+      text-align: center;
+      padding: 60px;
+      letter-spacing: 4px;
+      font-size: .75rem;
+    }
+
+    /* Modal */
+    .img-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, .92);
+      backdrop-filter: blur(10px);
+      z-index: 300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .img-modal.show {
+      display: flex;
+    }
+
+    .img-modal img {
+      max-width: 400px;
+      max-height: 80vh;
+      border-radius: 8px;
+      border: 2px solid rgba(79, 195, 247, .3);
+      box-shadow: 0 0 40px rgba(79, 195, 247, .15);
+      object-fit: contain;
+    }
+
+    .img-modal-close {
+      font-family: 'Orbitron', monospace;
+      font-size: .55rem;
+      color: rgba(79, 195, 247, .4);
+      letter-spacing: 3px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      padding: 14px 26px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, #0277bd, #0288d1);
+      border: 1px solid #4fc3f7;
+      border-radius: 8px;
+      box-shadow: 0 4px 25px rgba(79, 195, 247, .25);
+      z-index: 400;
+      transform: translateX(130%);
+      transition: transform .35s cubic-bezier(.23, 1, .32, 1);
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGIN -->
+  <div id="loginWrap">
+    <div id="loginBox">
+      <h2>&#9889; CCL ADMIN</h2>
+      <p>ENTER PASSWORD TO CONTINUE</p>
+      <input type="password" id="pwdInput" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+      <button onclick="doLogin()">ACCESS PANEL</button>
+      <div id="loginErr">&#10007; Wrong password</div>
+    </div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div class="admin" id="adminPanel">
+    <div class="admin-bar">
+      <h1>&#9889; CCL ADMIN PANEL <span class="live-dot"></span></h1>
+      <div class="admin-btns">
+        <a class="ab ab-view" href="/" target="_blank">VIEW SITE</a>
+        <button class="ab ab-refresh" onclick="loadTeams();showToast('Refreshed!')">REFRESH</button>
+        <button class="ab ab-clear" onclick="confirmClearAll()">CLEAR ALL</button>
+      </div>
+    </div>
+
+    <div class="sched-ctrl">
+      <h3>&#128197; MATCH SCHEDULE</h3>
+      <input class="sched-input" type="text" id="schedDate" placeholder="Date (e.g. 25 FEB 2026)" value="25 FEB 2026">
+      <input class="sched-input" type="text" id="schedTime" placeholder="Time (e.g. 8:00 PM)" value="8:00 PM">
+      <label class="sched-live-toggle">
+        <input type="checkbox" id="schedLive">
+        <span class="sched-toggle-track"></span>
+        <span class="sched-toggle-label">LIVE</span>
+      </label>
+      <button class="btn-sched" onclick="saveSchedule()">UPDATE</button>
+      <button class="btn-sched-clear" onclick="clearSchedule()">CLEAR</button>
+    </div>
+
+    <div class="stats" id="stats">
+      <div class="stat">
+        <div class="stat-n" id="sReg">0</div>
+        <div class="stat-l">Registered</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n" id="sLeft">12</div>
+        <div class="stat-l">Slots Left</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n" id="sVer">0</div>
+        <div class="stat-l">Verified</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n" id="sPen">0</div>
+        <div class="stat-l">Pending</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n" id="sPly">0</div>
+        <div class="stat-l">Players</div>
+      </div>
+    </div>
+    <div class="tg" id="teamsGrid"></div>
+  </div>
+
+  <!-- Screenshot Modal -->
+  <div class="img-modal" id="imgModal" onclick="closeImg()">
+    <img id="imgModalImg" src="" alt="Payment Screenshot">
+    <div class="img-modal-close">CLICK ANYWHERE TO CLOSE</div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const PWD = 'ccl2025';
+    let AUTH = '';
+    let knownIds = new Set();
+    let firstLoad = true;
+
+    /* ── Login ── */
+    function doLogin() {
+      const v = document.getElementById('pwdInput').value;
+      if (v === PWD) {
+        AUTH = v;
+        document.getElementById('loginWrap').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        loadTeams();
+        loadScheduleInputs();
+        setInterval(pollTeams, 6000);
+      } else {
+        document.getElementById('loginErr').style.display = 'block';
+        document.getElementById('pwdInput').value = '';
+        document.getElementById('pwdInput').focus();
+      }
+    }
+
+    /* ── Auth header ── */
+    function authHeaders() {
+      return { 'Authorization': 'Bearer ' + PWD, 'Content-Type': 'application/json' };
+    }
+
+    /* ── Load & render teams ── */
+    async function loadTeams() {
+      try {
+        const r = await fetch('/api/teams');
+        const d = await r.json();
+        const list = d.teams || d;
+        const newIds = [];
+        if (!firstLoad) { list.forEach(t => { if (!knownIds.has(t.id)) newIds.push(t.id); }); }
+        list.forEach(t => knownIds.add(t.id));
+        if (newIds.length && !firstLoad) {
+          const nt = list.find(t => t.id === newIds[0]);
+          showToast('🔔 NEW: "' + (nt.name || nt.teamName) + '" registered! Slot #' + nt.slot);
+        }
+        updateStats(list, d.slotsLeft);
+        renderTeams(list, new Set(newIds));
+        firstLoad = false;
+      } catch (e) { console.error(e); }
+    }
+
+    async function pollTeams() { await loadTeams(); }
+
+    /* ── Stats ── */
+    function updateStats(teams, slotsLeft) {
+      document.getElementById('sReg').textContent = teams.length;
+      document.getElementById('sLeft').textContent = slotsLeft !== undefined ? slotsLeft : (12 - teams.length);
+      document.getElementById('sVer').textContent = teams.filter(t => t.verified).length;
+      document.getElementById('sPen').textContent = teams.filter(t => t.hasScreenshot && !t.verified).length;
+      document.getElementById('sPly').textContent = teams.length * 4;
+    }
+
+    /* ── Render teams ── */
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    function renderTeams(teams, newIds) {
+      const g = document.getElementById('teamsGrid');
+      if (!teams.length) { g.innerHTML = '<div class="empty">NO TEAMS REGISTERED YET</div>'; return; }
+      g.innerHTML = teams.map(t => {
+        const isNew = newIds && newIds.has(t.id);
+        const name = t.name || t.teamName || '';
+        const players = t.players || ['', '', '', ''];
+        let payHtml = '';
+        if (t.hasScreenshot) {
+          const sc = t.verified ? 'verified' : 'pending';
+          const st = t.verified ? '&#10003; VERIFIED' : '&#9679; PENDING';
+          const bc = t.verified ? 'undo-verify' : 'do-verify';
+          const bt = t.verified ? 'UNVERIFY' : 'VERIFY';
+          payHtml = `<div class="tc-pay">
+        <div class="tc-pay-thumb" onclick="openImg('${esc(t.id)}')">
+          <img src="/api/screenshot/${esc(t.id)}" alt="pay" onerror="this.style.opacity=0.2">
+        </div>
+        <div class="tc-pay-info">
+          <span class="tc-pay-label">Payment Screenshot</span>
+          <span class="tc-pay-status ${sc}">${st}</span>
+        </div>
+        <button class="btn-verify ${bc}" data-id="${esc(t.id)}" data-v="${!t.verified}" onclick="toggleVerify('${esc(t.id)}')">${bt}</button>
+      </div>`;
+        } else {
+          payHtml = `<div class="tc-pay"><span class="no-ss">No payment screenshot uploaded</span></div>`;
+        }
+        const playerRows = players.map((p, j) =>
+          `<div class="tc-pr"><label>P${j + 1}</label><input type="text" id="p${j}-${esc(t.id)}" value="${esc(p)}"></div>`
+        ).join('');
+        const cls = isNew ? ' new-team' : '';
+        return `<div class="tc${cls}" id="card-${esc(t.id)}">
+      <div class="tc-top">
+        <span class="tc-slot">SLOT #${t.slot}</span>
+        <span class="tc-time">${esc(t.registeredAt || t.time || '')}</span>
+      </div>
+      <div class="tc-name-row">
+        <label>TEAM</label>
+        <input type="text" id="name-${esc(t.id)}" value="${esc(name)}">
+      </div>
+      <div class="tc-players">${playerRows}</div>
+      ${payHtml}
+      <div class="tc-btns">
+        <button class="btn-save" onclick="saveTeam('${esc(t.id)}')">SAVE</button>
+        <button class="btn-del" onclick="deleteTeam('${esc(t.id)}','${esc(name)}')">DELETE</button>
+      </div>
+    </div>`;
+      }).join('');
+    }
+
+    /* ── Toggle verify ── */
+    async function toggleVerify(id) {
+      try {
+        const t_el = document.querySelector(`[data-id="${id}"]`);
+        const newVal = t_el ? t_el.dataset.v === 'true' : true;
+        const r = await fetch('/api/admin/verify/' + id, {
+          method: 'PUT',
+          headers: authHeaders(),
+          body: JSON.stringify({ verified: newVal })
+        });
+        const d = await r.json();
+        showToast(d.verified ? '✓ Payment VERIFIED' : 'Unverified');
+        loadTeams();
+      } catch (e) { showToast('Error: ' + e.message); }
+    }
+
+    /* ── Save team ── */
+    async function saveTeam(id) {
+      const nameEl = document.getElementById('name-' + id);
+      if (!nameEl) return;
+      const newName = nameEl.value.trim();
+      const players = [];
+      for (let i = 0; i < 4; i++) {
+        const el = document.getElementById('p' + i + '-' + id);
+        players.push(el ? el.value.trim() : '');
+      }
+      try {
+        await fetch('/api/admin/team/' + id, {
+          method: 'PUT',
+          headers: authHeaders(),
+          body: JSON.stringify({ teamName: newName, players })
+        });
+        showToast('✓ ' + newName + ' saved!');
+        loadTeams();
+      } catch (e) { showToast('Error: ' + e.message); }
+    }
+
+    /* ── Delete team ── */
+    async function deleteTeam(id, name) {
+      if (!confirm('Delete team "' + name + '"?')) return;
+      try {
+        await fetch('/api/admin/team/' + id, { method: 'DELETE', headers: authHeaders() });
+        showToast('Deleted ' + name);
+        loadTeams();
+      } catch (e) { showToast('Error: ' + e.message); }
+    }
+
+    /* ── Clear all ── */
+    async function confirmClearAll() {
+      if (!confirm('Clear ALL registered teams? This cannot be undone!')) return;
+      try {
+        await fetch('/api/admin/teams', { method: 'DELETE', headers: authHeaders() });
+        showToast('All teams cleared!');
+        loadTeams();
+      } catch (e) { showToast('Error: ' + e.message); }
+    }
+
+    /* ── Schedule ── */
+    async function saveSchedule() {
+      const date = document.getElementById('schedDate').value.trim();
+      const time = document.getElementById('schedTime').value.trim();
+      const isLive = document.getElementById('schedLive').checked;
+      try {
+        const r = await fetch('/api/admin/schedule', {
+          method: 'PUT',
+          headers: authHeaders(),
+          body: JSON.stringify({ date, time, isLive })
+        });
+        const d = await r.json();
+        if (d.success) showToast('✓ Schedule updated — ' + (date || 'cleared'));
+        else showToast('Error: ' + (d.error || 'unknown'));
+      } catch (e) { showToast('Error: ' + e.message); }
+    }
+    async function clearSchedule() {
+      document.getElementById('schedDate').value = '';
+      document.getElementById('schedTime').value = '';
+      document.getElementById('schedLive').checked = false;
+      try {
+        await fetch('/api/admin/schedule', {
+          method: 'PUT',
+          headers: authHeaders(),
+          body: JSON.stringify({ date: '', time: '', isLive: false })
+        });
+        showToast('Schedule cleared!');
+      } catch (e) { showToast('Schedule cleared (local)!'); }
+    }
+    async function loadScheduleInputs() {
+      try {
+        const r = await fetch('/api/schedule');
+        const d = await r.json();
+        if (d.schedule) {
+          document.getElementById('schedDate').value = d.schedule.date || '';
+          document.getElementById('schedTime').value = d.schedule.time || '';
+          document.getElementById('schedLive').checked = !!d.schedule.isLive;
+        }
+      } catch (e) { }
+    }
+
+    /* ── Screenshot modal ── */
+    function openImg(id) {
+      document.getElementById('imgModalImg').src = '/api/screenshot/' + id;
+      document.getElementById('imgModal').classList.add('show');
+    }
+    function closeImg() { document.getElementById('imgModal').classList.remove('show'); }
+
+    /* ── Toast ── */
+    function showToast(m) {
+      const t = document.getElementById('toast');
+      t.textContent = m; t.className = 'toast';
+      setTimeout(() => t.classList.add('show'), 10);
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+  </script>
+</body>
+
+</html>
