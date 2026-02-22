@@ -1679,53 +1679,80 @@
         }
 
         async function registerTeam() {
+            const btn = document.getElementById('regBtn');
             if (!payOk) { toast('Upload payment screenshot first!', 1); return; }
             if (teams.length >= MAX) { toast('ALL SLOTS FILLED!', 1); return; }
+
             const tn = document.getElementById('teamName').value.trim();
             const pl = ['p1', 'p2', 'p3', 'p4'].map(id => document.getElementById(id).value.trim());
+
             if (!tn) { toast('Enter team name!', 1); return; }
             if (pl.some(p => !p)) { toast('All 4 player names required!', 1); return; }
-            // Read payment screenshot as base64
-            let paymentScreenshot = null;
-            const payFile = document.getElementById('payFile');
-            if (payFile && payFile.files && payFile.files[0]) {
-                paymentScreenshot = await new Promise(resolve => {
-                    const reader = new FileReader();
-                    reader.onload = e => resolve(e.target.result);
-                    reader.readAsDataURL(payFile.files[0]);
-                });
-            }
+
+            // Loading state
+            btn.disabled = true;
+            btn.textContent = 'REGISTERING...';
+
             try {
+                // Read payment screenshot as base64
+                const payFile = document.getElementById('payFile');
+                let paymentScreenshot = null;
+                if (payFile && payFile.files && payFile.files[0]) {
+                    paymentScreenshot = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = e => resolve(e.target.result);
+                        reader.onerror = e => reject(new Error('File read error'));
+                        reader.readAsDataURL(payFile.files[0]);
+                    });
+                }
+
+                console.log('Registering team:', tn);
                 const r = await fetch(API + '/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ teamName: tn, players: pl, paymentScreenshot })
                 });
+
                 const d = await r.json();
-                if (!r.ok) { toast(d.error || 'Registration failed!', 1); return; }
-                teams.push(d.team);
-                localStorage.setItem('cclTeams', JSON.stringify(teams));
-            } catch (e) {
-                if (teams.some(t => t.name.toLowerCase() === tn.toLowerCase())) {
-                    toast('Team name taken!', 1); return;
+                if (!r.ok) {
+                    toast(d.error || 'Server rejected registration!', 1);
+                    btn.disabled = false;
+                    btn.textContent = 'REGISTER';
+                    return;
                 }
-                teams.push({ id: Date.now().toString(), name: tn, players: pl, slot: teams.length + 1 });
+
+                // Success
+                teams = (await fetchTeams()).teams;
                 localStorage.setItem('cclTeams', JSON.stringify(teams));
+
+                // Clear form
+                document.getElementById('teamName').value = '';
+                ['p1', 'p2', 'p3', 'p4'].forEach(id => document.getElementById(id).value = '');
+                payOk = false;
+                const pb = document.getElementById('payBtn');
+                pb.classList.remove('ok');
+                pb.innerHTML = 'PAYMENT<br>SCREENSHOT';
+                const ps = document.getElementById('paySt');
+                ps.textContent = 'No file uploaded';
+                ps.classList.remove('done');
+                document.getElementById('payFile').value = '';
+
+                updateCount();
+                checkFull();
+                toast('\u2713 TEAM "' + tn.toUpperCase() + '" \u2014 CONFIRMED!');
+                setTimeout(() => goTo('confirmlist'), 1500);
+
+            } catch (e) {
+                console.error('Registration error:', e);
+                // Check if it's already in local list just in case of weird network behavior
+                if (teams.some(t => t.name.toLowerCase() === tn.toLowerCase())) {
+                    toast('Team name already in list!', 1);
+                } else {
+                    toast('Network error! Check your internet.', 1);
+                }
+                btn.disabled = false;
+                btn.textContent = 'REGISTER';
             }
-            document.getElementById('teamName').value = '';
-            ['p1', 'p2', 'p3', 'p4'].forEach(id => document.getElementById(id).value = '');
-            payOk = false;
-            const pb = document.getElementById('payBtn');
-            pb.classList.remove('ok');
-            pb.innerHTML = 'PAYMENT<br>SCREENSHOT';
-            const ps = document.getElementById('paySt');
-            ps.textContent = 'No file uploaded';
-            ps.classList.remove('done');
-            document.getElementById('payFile').value = '';
-            updateCount();
-            checkFull();
-            toast('\u2713 TEAM "' + tn.toUpperCase() + '" \u2014 SLOT #' + teams.length + ' CONFIRMED!');
-            setTimeout(() => goTo('confirmlist'), 1500);
         }
 
         function renderSlots() {

@@ -13,7 +13,29 @@ function saveTeams(t) { fs.writeFileSync(DATA_FILE, JSON.stringify(t, null, 2), 
 let teams = loadTeams();
 console.log(`Loaded ${teams.length} teams`);
 
-function parseBody(req) { return new Promise(r => { let b = ''; req.on('data', c => { b += c; if (b.length > 15e6) req.destroy(); }); req.on('end', () => { try { r(JSON.parse(b)); } catch (e) { r({}); } }); }); }
+function parseBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk;
+      if (body.length > 25e6) {
+        console.error('Payload too large:', body.length);
+        req.destroy();
+        reject(new Error('Payload too large'));
+      }
+    });
+    req.on('end', () => {
+      try {
+        if (!body) return resolve({});
+        resolve(JSON.parse(body));
+      } catch (e) {
+        console.error('Body parse err:', e.message);
+        resolve({});
+      }
+    });
+    req.on('error', err => reject(err));
+  });
+}
 function setCORS(res) { res.setHeader('Access-Control-Allow-Origin', '*'); res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS'); res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization'); }
 function json(res, c, d) { setCORS(res); res.writeHead(c, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(d)); }
 function serve(res, f, ct) { const p = path.join(__dirname, f); if (!fs.existsSync(p)) { res.writeHead(404); res.end('Not found'); return; } res.writeHead(200, { 'Content-Type': ct }); fs.createReadStream(p).pipe(res); }
