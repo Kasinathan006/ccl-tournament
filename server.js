@@ -1,10 +1,10 @@
 const http = require('http'), fs = require('fs'), path = require('path'), url = require('url');
-const PORT = 3000, ADMIN_PASSWORD = 'ccl2025', MAX_SLOTS = 12;
+const PORT = 3001, ADMIN_PASSWORD = 'ccl2025', MAX_SLOTS = 12;
 const DATA_FILE = path.join(__dirname, 'teams.json');
 const SS_DIR = path.join(__dirname, 'screenshots');
 if (!fs.existsSync(SS_DIR)) fs.mkdirSync(SS_DIR);
 const SCHEDULE_FILE = path.join(__dirname, 'schedule.json');
-function loadSchedule() { try { if (fs.existsSync(SCHEDULE_FILE)) return JSON.parse(fs.readFileSync(SCHEDULE_FILE, 'utf8')); } catch (e) { } return { date: '', time: '', isLive: false }; }
+function loadSchedule() { try { if (fs.existsSync(SCHEDULE_FILE)) return JSON.parse(fs.readFileSync(SCHEDULE_FILE, 'utf8')); } catch (e) { } return { date: '', time: '', isLive: false, countdown: '' }; }
 function saveSchedule(s) { fs.writeFileSync(SCHEDULE_FILE, JSON.stringify(s, null, 2), 'utf8'); }
 let schedule = loadSchedule();
 
@@ -171,6 +171,21 @@ body{font-family:'Rajdhani',sans-serif;background:radial-gradient(ellipse at 50%
     <div class="stat"><div class="sn" id="sPen">0</div><div class="sl">Pending</div></div>
     <div class="stat"><div class="sn" id="sPly">0</div><div class="sl">Players</div></div>
   </div>
+  
+  <div class="schedule-panel tc" style="margin-bottom:20px; max-width:100%">
+    <div class="tc-top"><span class="tc-slot">MATCH SCHEDULE & COUNTDOWN</span></div>
+    <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:10px;">
+      <div class="tc-nr" style="flex:1; min-width:200px;"><label>DATE</label><input type="text" id="schedDate" placeholder="e.g. 25 FEB"></div>
+      <div class="tc-nr" style="flex:1; min-width:200px;"><label>TIME</label><input type="text" id="schedTime" placeholder="e.g. 07:00 PM"></div>
+      <div class="tc-nr" style="flex:2; min-width:250px;"><label>COUNTDOWN</label><input type="datetime-local" id="schedCount"></div>
+      <div class="tc-nr" style="width:auto; display:flex; align-items:center; gap:8px;">
+        <label style="min-width:auto">LIVE</label>
+        <input type="checkbox" id="schedLive" style="width:20px; height:20px;">
+      </div>
+      <button class="bsv" onclick="updateSchedule()" style="padding:10px 25px; font-size:0.7rem;">UPDATE SCHEDULE</button>
+    </div>
+  </div>
+
   <div class="tg" id="tg"></div>
 </div>
 <div class="imgm" id="imgm" onclick="closeImg()">
@@ -184,8 +199,28 @@ let auth='',knownIds=new Set(),firstLoad=true;
 
 function login(){
   const v=document.getElementById('pi').value;
-  if(v===PWD){auth=v;document.getElementById('lw').style.display='none';document.getElementById('adm').style.display='block';loadTeams();setInterval(loadTeams,5000);}
+  if(v===PWD){auth=v;document.getElementById('lw').style.display='none';document.getElementById('adm').style.display='block';loadTeams();initSched();setInterval(loadTeams,5000);}
   else{document.getElementById('le').style.display='block';document.getElementById('pi').value='';document.getElementById('pi').focus();}
+}
+
+async function initSched(){
+  const r=await fetch('/api/schedule'), d=await r.json(), s=d.schedule;
+  document.getElementById('schedDate').value=s.date||'';
+  document.getElementById('schedTime').value=s.time||'';
+  document.getElementById('schedCount').value=s.countdown||'';
+  document.getElementById('schedLive').checked=!!s.isLive;
+}
+
+async function updateSchedule(){
+  const b={
+    date: document.getElementById('schedDate').value,
+    time: document.getElementById('schedTime').value,
+    countdown: document.getElementById('schedCount').value,
+    isLive: document.getElementById('schedLive').checked
+  };
+  const r=await fetch('/api/admin/schedule',{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+auth},body:JSON.stringify(b)});
+  const d=await r.json();
+  if(d.success)toast('Schedule updated!');else toast('ERR: '+d.error);
 }
 
 async function loadTeams(){
@@ -374,9 +409,10 @@ function toast(m){const t=document.getElementById('toast');t.textContent=m;t.cla
       const b = await parseBody(req);
       if (typeof b.date === 'string') schedule.date = b.date;
       if (typeof b.time === 'string') schedule.time = b.time;
+      if (typeof b.countdown === 'string') schedule.countdown = b.countdown;
       if (typeof b.isLive === 'boolean') schedule.isLive = b.isLive;
       saveSchedule(schedule);
-      console.log(`[ADMIN] Schedule updated: ${schedule.date} ${schedule.time} live=${schedule.isLive}`);
+      console.log(`[ADMIN] Schedule updated: ${schedule.date} ${schedule.time} count=${schedule.countdown} live=${schedule.isLive}`);
       json(res, 200, { success: true, schedule }); return;
     }
 

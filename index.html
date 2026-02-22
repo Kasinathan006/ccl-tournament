@@ -58,10 +58,24 @@
             position: relative;
             z-index: 1;
             min-height: 100vh;
+            opacity: 0;
         }
 
         .page.active {
             display: flex;
+            animation: pf .6s cubic-bezier(.23, 1, .32, 1) forwards;
+        }
+
+        @keyframes pf {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* === PAGE 1 === */
@@ -304,6 +318,80 @@
             margin-top: 4px;
         }
 
+        /* MAP SECTION */
+        .map-section {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            animation: fadeInMap 1.5s ease-out 1s forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeInMap {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .map-frame {
+            position: relative;
+            padding: 6px;
+            background: rgba(79, 195, 247, 0.05);
+            border: 2px solid rgba(79, 195, 247, 0.25);
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(79, 195, 247, 0.1);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+
+        .map-frame:hover {
+            border-color: rgba(79, 195, 247, 0.6);
+            box-shadow: 0 0 45px rgba(79, 195, 247, 0.25);
+            transform: scale(1.05) rotate(1deg);
+        }
+
+        .map-image {
+            width: clamp(140px, 12vw, 200px);
+            height: auto;
+            border-radius: 16px;
+            display: block;
+            filter: brightness(1.05);
+        }
+
+        .map-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 5px;
+            color: rgba(79, 195, 247, 0.7);
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(79, 195, 247, 0.3);
+        }
+
+        .map-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .map-detail-item {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(0.6rem, 1vw, 0.8rem);
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+        }
+
+        .map-detail-item .highlight {
+            color: #4fc3f7;
+            text-shadow: 0 0 10px rgba(79, 195, 247, 0.4);
+            margin-left: 5px;
+        }
+
         /* MOBILE */
         @media(max-width:768px) {
             .hero-mid {
@@ -352,6 +440,89 @@
             to {
                 opacity: 1;
                 transform: translateX(-50%) scale(1.1);
+            }
+        }
+
+        .char-bg-logo {
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140%;
+            opacity: 0;
+            filter: blur(1.2px) brightness(1.2);
+            z-index: 0;
+            pointer-events: none;
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 0) 85%);
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 0) 85%);
+            animation: logoFade 2.5s ease-out 0.8s forwards;
+        }
+
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(transparent 45%, rgba(79, 195, 247, 0.45) 50%, transparent 55%);
+            background-size: 100% 20px;
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0.3;
+            animation: sc 6s linear infinite;
+        }
+
+        @keyframes sc {
+            0% {
+                transform: translateY(-100%);
+            }
+
+            100% {
+                transform: translateY(100%);
+            }
+        }
+
+        .verified-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 230, 118, 0.15);
+            border: 1px solid #00e676;
+            color: #00e676;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            box-shadow: 0 0 10px rgba(0, 230, 118, 0.2);
+        }
+
+        .pending-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 152, 0, 0.1);
+            border: 1px solid #ff9800;
+            color: #ff9800;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        @keyframes logoFade {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) scale(0.9);
+            }
+
+            to {
+                opacity: 0.15;
+                transform: translateX(-50%) scale(1);
             }
         }
 
@@ -498,8 +669,36 @@
 
         .social-item.discord:hover {
             background: #5865f2;
-            border-color: #fff;
-            color: #fff;
+            border-color: #5865f2;
+        }
+
+        /* REGISTRATION BACKGROUND */
+        .reg-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 50%, transparent 20%, #000 100%);
+        }
+
+        .reg-bg img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.25;
+            filter: brightness(0.7) blur(2px);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 10%, rgba(0, 0, 0, 0) 90%);
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 10%, rgba(0, 0, 0, 0) 90%);
+        }
+
+        @media(max-width:768px) {
+            .reg-bg img {
+                object-position: 70% center;
+            }
         }
 
         .rules-btn {
@@ -1003,9 +1202,11 @@
             display: flex;
             flex-direction: column;
             gap: 4px;
-            margin-top: 8px;
-            width: 100%;
-            padding: 0 8px;
+            margin-top: 12px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            align-items: flex-start;
         }
 
         .sp {
@@ -1014,8 +1215,18 @@
             font-weight: 600;
             color: rgba(255, 255, 255, .55);
             letter-spacing: .5px;
-            text-align: center;
-            line-height: 1.5;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            line-height: 1.2;
+        }
+
+        .sp-label {
+            color: #4fc3f7;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            width: 30px;
+            display: inline-block;
         }
 
         .fm {
@@ -1394,6 +1605,73 @@
             text-align: center;
             width: 100%;
         }
+
+        /* COUNTDOWN TIMER */
+        .countdown-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin: 15px 0 25px;
+            padding: 15px 30px;
+            background: rgba(79, 195, 247, .04);
+            border: 1px solid rgba(79, 195, 247, .15);
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            animation: pf .8s ease-out;
+        }
+
+        .countdown-container.active {
+            display: flex;
+        }
+
+        .countdown-label {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: rgba(79, 195, 247, .5);
+            letter-spacing: 5px;
+            text-transform: uppercase;
+        }
+
+        .countdown-timer {
+            display: flex;
+            gap: 15px;
+        }
+
+        .t-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 50px;
+        }
+
+        .t-val {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            font-weight: 900;
+            color: #4fc3f7;
+            text-shadow: 0 0 15px rgba(79, 195, 247, .4);
+            line-height: 1;
+        }
+
+        .t-lbl {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .4);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .t-sep {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: rgba(79, 195, 247, .2);
+            padding-top: 2px;
+        }
     </style>
 </head>
 
@@ -1421,21 +1699,34 @@
         <img class="logo-img" src="CCL LOGO.png" alt="CCL Logo">
         <h1 class="main-title">COMRADE CHAMPION LEAGUE</h1>
         <p class="sub-title">SKILL DEFINE THE CHAMPIONS</p>
+
+        <div class="countdown-container" id="cdBox">
+            <span class="countdown-label">TOURNAMENT BEGINS IN</span>
+            <div class="countdown-timer">
+                <div class="t-unit"><span class="t-val" id="cdDays">00</span><span class="t-lbl">DAYS</span></div>
+                <div class="t-sep">:</div>
+                <div class="t-unit"><span class="t-val" id="cdHours">00</span><span class="t-lbl">HRS</span></div>
+                <div class="t-sep">:</div>
+                <div class="t-unit"><span class="t-val" id="cdMins">00</span><span class="t-lbl">MINS</span></div>
+                <div class="t-sep">:</div>
+                <div class="t-unit"><span class="t-val" id="cdSecs">00</span><span class="t-lbl">SECS</span></div>
+            </div>
+        </div>
         <!-- HERO MID: Prize + Character + Entry -->
         <div class="hero-mid">
 
             <!-- LEFT: Prize Pool -->
             <div class="prize-left">
                 <span class="prize-pool-label">TOTAL PRIZE POOL</span>
-                <div class="prize-pool-amount"><span class="rupee">&#8377;</span>350</div>
+                <div class="prize-pool-amount"><span class="rupee">&#8377;</span>250</div>
                 <div class="prize-divider"></div>
                 <div class="prize-breakdown">
                     <div class="prize-row prize-1st"><span class="prize-pos">1<sup>ST</sup></span><span
                             class="prize-label">PRIZE</span><span class="prize-dash">—</span><span
-                            class="prize-val"><span class="rupee">&#8377;</span>200</span></div>
+                            class="prize-val"><span class="rupee">&#8377;</span>120</span></div>
                     <div class="prize-row prize-2nd"><span class="prize-pos">2<sup>ND</sup></span><span
                             class="prize-label">PRIZE</span><span class="prize-dash">—</span><span
-                            class="prize-val"><span class="rupee">&#8377;</span>100</span></div>
+                            class="prize-val"><span class="rupee">&#8377;</span>80</span></div>
                     <div class="prize-row prize-3rd"><span class="prize-pos">3<sup>RD</sup></span><span
                             class="prize-label">PRIZE</span><span class="prize-dash">—</span><span
                             class="prize-val"><span class="rupee">&#8377;</span>50</span></div>
@@ -1446,6 +1737,8 @@
             <div class="char-center">
                 <div class="char-area">
                     <div class="char-glow"></div>
+                    <div class="scan-line"></div>
+                    <img class="char-bg-logo" src="ff_logo.png" alt="FF Logo">
                     <img class="char-img" src="CHARACTER PNG.png" alt="Character">
                     <div class="ep" style="left:28%;top:38%"></div>
                     <div class="ep" style="left:67%;top:33%;animation-delay:.6s"></div>
@@ -1457,8 +1750,18 @@
             <!-- RIGHT: Entry Fee -->
             <div class="entry-right">
                 <div class="entry-box">
-                    <div class="entry-amount">&#8377;40</div>
+                    <div class="entry-amount">&#8377;30</div>
                     <div class="entry-label">ENTRY</div>
+                </div>
+
+                <div class="map-section">
+                    <div class="map-frame">
+                        <img class="map-image" src="map.png" alt="Tournament Map">
+                    </div>
+                    <div class="map-details">
+                        <div class="map-detail-item">MODE: <span class="highlight">BR ( E-SPORTS MODE )</span></div>
+                        <div class="map-detail-item">MAP: <span class="highlight">BERMUDA</span></div>
+                    </div>
                 </div>
             </div>
 
@@ -1474,6 +1777,9 @@
 
     <!-- PAGE 2 -->
     <div id="registration" class="page">
+        <div class="reg-bg">
+            <img src="reg_bg.jpg" alt="Reg background">
+        </div>
         <button class="back-btn" onclick="goTo('landing')">&#8592; BACK</button>
         <h2 class="reg-header">TOURNAMENT REGISTRATION</h2>
         <div class="reg-layout">
@@ -1587,21 +1893,29 @@
 
                     <div class="rule-section">
                         <div class="rule-title">HACK / PANEL DETECTION</div>
-                        <div class="rule-text">If hack/panel is detected &#8594; <strong>Direct
-                                Disqualification.</strong><br>If
-                            there
-                            is any doubt, we will call for <strong>Discord checking.</strong><br>Players must join
-                            Discord and show
-                            proper
-                            proof.<br><span class="warn">If you fail to join Discord &#8594; Team will be
-                                Disqualified.</span></div>
+                        <div class="rule-text">
+                            If hack/panel is detected &#8594; <strong>Direct Disqualification.</strong><br>
+                            (If there is any doubt, we will call for <strong>Discord checking.</strong>)<br>
+                            Players must join Discord and show proper proof.<br>
+                            <span class="warn">If you fail to join Discord &#8594; Team will be
+                                Disqualified.</span><br><br>
+
+                            <strong>Gameplay recording is compulsory.</strong> This is required to review and verify
+                            your gameplay if needed.<br>
+                            If proper gameplay recording is not provided when requested &#8594; <strong>Team will be
+                                Disqualified.</strong><br>
+                            Disqualified teams will not be eligible for prize rewards for that match.<br>
+                            <span class="warn">Prize rewards will only be given to next teams that successfully pass all
+                                verification and fair-play checks.</span>
+                        </div>
                     </div>
 
                     <div class="rule-section">
                         <div class="rule-title">PAYMENT &amp; MATCH RULES</div>
-                        <div class="rule-text"><strong>No refund</strong> after payment.<br>Match will start at the
-                            <strong>announced
-                                time.</strong><br><span class="warn">If your team does not join on time &#8594; Direct
+                        <div class="rule-text">
+                            <strong>No refund</strong> after payment.<br>
+                            Match will start at the <strong>announced time.</strong><br>
+                            <span class="warn">If your team does not join on time &#8594; Direct
                                 Disqualification.</span>
                         </div>
                     </div>
@@ -1765,10 +2079,13 @@
                     d.classList.add('filled');
                     d.style.animationDelay = (i * .08) + 's';
                     let ph = '';
-                    teams[i].players.forEach((p, j) => {
-                        ph += '<span class="sp">P' + (j + 1) + ': ' + p + '</span>';
-                    });
-                    d.innerHTML = '<span class="sc2">&#10003;</span><span class="sn">SLOT #' + (i + 1) + '</span><span class="st">' + teams[i].name + '</span><div class="sp-wrap">' + ph + '</div>';
+                    if (teams[i].players && Array.isArray(teams[i].players)) {
+                        teams[i].players.forEach((p, j) => {
+                            ph += '<div class="sp"><span class="sp-label">P' + (j + 1) + ':</span>' + p + '</div>';
+                        });
+                    }
+                    let bhtml = teams[i].verified ? '<div class="verified-badge"><i class="fas fa-check-circle"></i> VERIFIED</div>' : '<div class="pending-badge">PENDING</div>';
+                    d.innerHTML = bhtml + '<span class="sc2">&#10003;</span><span class="sn">SLOT #' + (i + 1) + '</span><span class="st">' + teams[i].name + '</span><div class="sp-wrap">' + ph + '</div>';
                 } else {
                     d.classList.add('empty');
                 }
@@ -1832,6 +2149,23 @@
         function updateScheduleUI(s) {
             const hasDate = s && s.date;
             const hasTime = s && s.time;
+            const hasCD = s && s.countdown;
+
+            // Update Countdown
+            if (hasCD) {
+                const target = new Date(s.countdown).getTime();
+                if (!isNaN(target)) {
+                    document.getElementById('cdBox').classList.add('active');
+                    updateTimer(target);
+                    if (window.cdInterval) clearInterval(window.cdInterval);
+                    window.cdInterval = setInterval(() => updateTimer(target), 1000);
+                } else {
+                    document.getElementById('cdBox').classList.remove('active');
+                }
+            } else {
+                document.getElementById('cdBox').classList.remove('active');
+            }
+
             if (!hasDate && !hasTime) {
                 document.getElementById('noSched').style.display = 'block';
                 document.getElementById('schedDateEl').style.display = 'none';
@@ -1846,6 +2180,29 @@
             if (hasTime) { document.getElementById('schedDiv').style.display = 'block'; document.getElementById('schedTimeEl').style.display = 'flex'; document.getElementById('schedTimeVal').textContent = s.time; }
             if (s.isLive) { document.getElementById('schedDiv2').style.display = 'block'; document.getElementById('schedLiveEl').classList.add('active'); }
             else { document.getElementById('schedDiv2').style.display = 'none'; document.getElementById('schedLiveEl').classList.remove('active'); }
+        }
+
+        function updateTimer(target) {
+            const now = new Date().getTime();
+            const diff = target - now;
+
+            if (diff <= 0) {
+                document.getElementById('cdDays').textContent = '00';
+                document.getElementById('cdHours').textContent = '00';
+                document.getElementById('cdMins').textContent = '00';
+                document.getElementById('cdSecs').textContent = '00';
+                return;
+            }
+
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById('cdDays').textContent = d.toString().padStart(2, '0');
+            document.getElementById('cdHours').textContent = h.toString().padStart(2, '0');
+            document.getElementById('cdMins').textContent = m.toString().padStart(2, '0');
+            document.getElementById('cdSecs').textContent = s.toString().padStart(2, '0');
         }
         async function fetchSchedule() {
             try { const r = await fetch(API + '/schedule'); const d = await r.json(); updateScheduleUI(d.schedule); } catch (e) { }

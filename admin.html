@@ -751,6 +751,7 @@
       <h3>&#128197; MATCH SCHEDULE</h3>
       <input class="sched-input" type="text" id="schedDate" placeholder="Date (e.g. 25 FEB 2026)" value="25 FEB 2026">
       <input class="sched-input" type="text" id="schedTime" placeholder="Time (e.g. 8:00 PM)" value="8:00 PM">
+      <input class="sched-input" type="datetime-local" id="schedCount" title="Countdown Timer Target">
       <label class="sched-live-toggle">
         <input type="checkbox" id="schedLive">
         <span class="sched-toggle-track"></span>
@@ -963,12 +964,13 @@
     async function saveSchedule() {
       const date = document.getElementById('schedDate').value.trim();
       const time = document.getElementById('schedTime').value.trim();
+      const countdown = document.getElementById('schedCount').value;
       const isLive = document.getElementById('schedLive').checked;
       try {
         const r = await fetch('/api/admin/schedule', {
           method: 'PUT',
           headers: authHeaders(),
-          body: JSON.stringify({ date, time, isLive })
+          body: JSON.stringify({ date, time, countdown, isLive })
         });
         const d = await r.json();
         if (d.success) showToast('✓ Schedule updated — ' + (date || 'cleared'));
@@ -978,12 +980,13 @@
     async function clearSchedule() {
       document.getElementById('schedDate').value = '';
       document.getElementById('schedTime').value = '';
+      document.getElementById('schedCount').value = '';
       document.getElementById('schedLive').checked = false;
       try {
         await fetch('/api/admin/schedule', {
           method: 'PUT',
           headers: authHeaders(),
-          body: JSON.stringify({ date: '', time: '', isLive: false })
+          body: JSON.stringify({ date: '', time: '', countdown: '', isLive: false })
         });
         showToast('Schedule cleared!');
       } catch (e) { showToast('Schedule cleared (local)!'); }
@@ -995,7 +998,13 @@
         if (d.schedule) {
           document.getElementById('schedDate').value = d.schedule.date || '';
           document.getElementById('schedTime').value = d.schedule.time || '';
+          document.getElementById('schedCount').value = d.schedule.countdown || '';
           document.getElementById('schedLive').checked = !!d.schedule.isLive;
+        } else { // Added else block to clear fields if no schedule is returned
+          document.getElementById('schedDate').value = '';
+          document.getElementById('schedTime').value = '';
+          document.getElementById('schedCount').value = '';
+          document.getElementById('schedLive').checked = false;
         }
       } catch (e) { }
     }
