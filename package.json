@@ -10,6 +10,6 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "mongoose": "^8.0.0"
+    "mongoose": "^8.23.0"
   }
 }
