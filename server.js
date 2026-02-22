@@ -1,5 +1,5 @@
 const http = require('http'), fs = require('fs'), path = require('path'), url = require('url');
-const PORT = 3001, ADMIN_PASSWORD = 'ccl2025', MAX_SLOTS = 12;
+const PORT = process.env.PORT || 3001, ADMIN_PASSWORD = 'ccl2025', MAX_SLOTS = 12;
 const DATA_FILE = path.join(__dirname, 'teams.json');
 const SS_DIR = path.join(__dirname, 'screenshots');
 if (!fs.existsSync(SS_DIR)) fs.mkdirSync(SS_DIR);
