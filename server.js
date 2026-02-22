@@ -1,17 +1,27 @@
-const http = require('http'), fs = require('fs'), path = require('path'), url = require('url');
+const http = require('http'), fs = require('fs'), path = require('path'), url = require('url'), mongoose = require('mongoose');
 const PORT = process.env.PORT || 3001, ADMIN_PASSWORD = 'ccl2025', MAX_SLOTS = 12;
-const DATA_FILE = path.join(__dirname, 'teams.json');
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ccl';
+
+mongoose.connect(MONGODB_URI).then(() => console.log('Connected to MongoDB')).catch(err => console.error('DB Conn Err:', err));
+
+const teamSchema = new mongoose.Schema({
+  id: String, name: String, players: [String], slot: Number, registeredAt: Date, verified: Boolean, screenshot: String
+});
+const Team = mongoose.model('Team', teamSchema);
+
+const scheduleSchema = new mongoose.Schema({
+  date: String, time: String, isLive: Boolean, countdown: String
+});
+const Schedule = mongoose.model('Schedule', scheduleSchema);
+
+async function getSchedule() {
+  let s = await Schedule.findOne();
+  if (!s) { s = new Schedule({ date: '', time: '', isLive: false, countdown: '' }); await s.save(); }
+  return s;
+}
+
 const SS_DIR = path.join(__dirname, 'screenshots');
 if (!fs.existsSync(SS_DIR)) fs.mkdirSync(SS_DIR);
-const SCHEDULE_FILE = path.join(__dirname, 'schedule.json');
-function loadSchedule() { try { if (fs.existsSync(SCHEDULE_FILE)) return JSON.parse(fs.readFileSync(SCHEDULE_FILE, 'utf8')); } catch (e) { } return { date: '', time: '', isLive: false, countdown: '' }; }
-function saveSchedule(s) { fs.writeFileSync(SCHEDULE_FILE, JSON.stringify(s, null, 2), 'utf8'); }
-let schedule = loadSchedule();
-
-function loadTeams() { try { if (fs.existsSync(DATA_FILE)) return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); } catch (e) { } return []; }
-function saveTeams(t) { fs.writeFileSync(DATA_FILE, JSON.stringify(t, null, 2), 'utf8'); }
-let teams = loadTeams();
-console.log(`Loaded ${teams.length} teams`);
 
 function parseBody(req) {
   return new Promise((resolve) => {
@@ -38,7 +48,6 @@ function setCORS(res) { res.setHeader('Access-Control-Allow-Origin', '*'); res.s
 function json(res, c, d) { setCORS(res); res.writeHead(c, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(d)); }
 function serve(res, f, ct) { const p = path.join(__dirname, f); if (!fs.existsSync(p)) { res.writeHead(404); res.end('Not found'); return; } res.writeHead(200, { 'Content-Type': ct }); fs.createReadStream(p).pipe(res); }
 function isAdmin(req) { return req.headers['authorization'] === `Bearer ${ADMIN_PASSWORD}`; }
-function hasScreenshot(id) { return fs.existsSync(path.join(SS_DIR, id + '.b64')); }
 
 const server = http.createServer(async (req, res) => {
   try {
@@ -50,10 +59,10 @@ const server = http.createServer(async (req, res) => {
     // Screenshot serving
     if (m === 'GET' && p.startsWith('/api/screenshot/')) {
       const tid = p.replace('/api/screenshot/', '').replace(/[^a-z0-9]/gi, '');
-      const fp = path.join(SS_DIR, tid + '.b64');
-      if (!fs.existsSync(fp)) { setCORS(res); res.writeHead(404); res.end(); return; }
+      const team = await Team.findOne({ id: tid });
+      if (!team || !team.screenshot) { setCORS(res); res.writeHead(404); res.end(); return; }
       try {
-        const raw = fs.readFileSync(fp, 'utf8');
+        const raw = team.screenshot;
         const mm = raw.match(/^data:(image\/[a-z]+);base64,/);
         const ct = mm ? mm[1] : 'image/jpeg';
         const buf = Buffer.from(raw.replace(/^data:image\/[a-z]+;base64,/, ''), 'base64');
@@ -321,7 +330,8 @@ function toast(m){const t=document.getElementById('toast');t.textContent=m;t.cla
 
     // GET /api/teams
     if (m === 'GET' && p === '/api/teams') {
-      const out = teams.map(t => ({ ...t, hasScreenshot: hasScreenshot(t.id) }));
+      const teams = await Team.find().sort({ slot: 1 });
+      const out = teams.map(t => ({ id: t.id, name: t.name, players: t.players, slot: t.slot, registeredAt: t.registeredAt, verified: t.verified, hasScreenshot: !!t.screenshot }));
       json(res, 200, { teams: out, maxSlots: MAX_SLOTS, slotsLeft: MAX_SLOTS - teams.length }); return;
     }
 
@@ -331,15 +341,22 @@ function toast(m){const t=document.getElementById('toast');t.textContent=m;t.cla
       if (b._error) { json(res, 400, { error: b._error }); return; }
       if (!b.teamName || !b.teamName.trim()) { json(res, 400, { error: 'Team name required' }); return; }
       if (!b.players || b.players.length !== 4 || b.players.some(x => !x || !x.trim())) { json(res, 400, { error: 'All 4 players required' }); return; }
-      if (teams.length >= MAX_SLOTS) { json(res, 400, { error: 'All slots filled!' }); return; }
-      if (teams.some(t => t.name.toLowerCase() === b.teamName.trim().toLowerCase())) { json(res, 400, { error: 'Team name taken!' }); return; }
-      const team = { id: Date.now().toString(36) + Math.random().toString(36).substr(2, 4), name: b.teamName.trim(), players: b.players.map(x => x.trim()), slot: teams.length + 1, registeredAt: new Date().toISOString(), verified: false };
-      if (b.paymentScreenshot && typeof b.paymentScreenshot === 'string' && b.paymentScreenshot.startsWith('data:image/')) {
-        try { fs.writeFileSync(path.join(SS_DIR, team.id + '.b64'), b.paymentScreenshot, 'utf8'); } catch (e) { console.error('SS save err:', e.message); }
-      }
-      teams.push(team); saveTeams(teams);
+      const count = await Team.countDocuments();
+      if (count >= MAX_SLOTS) { json(res, 400, { error: 'All slots filled!' }); return; }
+      const exists = await Team.findOne({ name: new RegExp('^' + b.teamName.trim() + '$', 'i') });
+      if (exists) { json(res, 400, { error: 'Team name taken!' }); return; }
+      const team = new Team({
+        id: Date.now().toString(36) + Math.random().toString(36).substr(2, 4),
+        name: b.teamName.trim(),
+        players: b.players.map(x => x.trim()),
+        slot: count + 1,
+        registeredAt: new Date(),
+        verified: false,
+        screenshot: b.paymentScreenshot || ''
+      });
+      await team.save();
       console.log(`[REG] "${team.name}" slot #${team.slot}`);
-      json(res, 200, { success: true, team, slotsLeft: MAX_SLOTS - teams.length }); return;
+      json(res, 200, { success: true, team, slotsLeft: MAX_SLOTS - (count + 1) }); return;
     }
 
     // Static files (after all API routes)
@@ -362,58 +379,60 @@ function toast(m){const t=document.getElementById('toast');t.textContent=m;t.cla
     // PUT /api/admin/verify/:id
     if (m === 'PUT' && p.startsWith('/api/admin/verify/')) {
       if (!isAdmin(req)) { json(res, 401, { error: 'Unauthorized' }); return; }
-      const id = p.replace('/api/admin/verify/', ''), b = await parseBody(req), idx = teams.findIndex(t => t.id === id);
-      if (idx === -1) { json(res, 404, { error: 'Not found' }); return; }
-      teams[idx].verified = !!b.verified; saveTeams(teams);
-      console.log(`[ADMIN] ${teams[idx].verified ? 'Verified' : 'Unverified'} "${teams[idx].name}"`);
-      json(res, 200, { success: true, verified: teams[idx].verified }); return;
+      const id = p.replace('/api/admin/verify/', ''), b = await parseBody(req);
+      const team = await Team.findOne({ id });
+      if (!team) { json(res, 404, { error: 'Not found' }); return; }
+      team.verified = !!b.verified; await team.save();
+      console.log(`[ADMIN] ${team.verified ? 'Verified' : 'Unverified'} "${team.name}"`);
+      json(res, 200, { success: true, verified: team.verified }); return;
     }
 
     // PUT /api/admin/team/:id
     if (m === 'PUT' && p.startsWith('/api/admin/team/')) {
       if (!isAdmin(req)) { json(res, 401, { error: 'Unauthorized' }); return; }
-      const id = p.split('/').pop(), b = await parseBody(req), idx = teams.findIndex(t => t.id === id);
-      if (idx === -1) { json(res, 404, { error: 'Not found' }); return; }
-      if (b.teamName) teams[idx].name = b.teamName.trim();
-      if (b.players && b.players.length === 4) teams[idx].players = b.players.map(x => x.trim());
-      saveTeams(teams); console.log(`[ADMIN] Updated "${teams[idx].name}"`);
-      json(res, 200, { success: true, team: teams[idx] }); return;
+      const id = p.split('/').pop(), b = await parseBody(req);
+      const team = await Team.findOne({ id });
+      if (!team) { json(res, 404, { error: 'Not found' }); return; }
+      if (b.teamName) team.name = b.teamName.trim();
+      if (b.players && b.players.length === 4) team.players = b.players.map(x => x.trim());
+      await team.save(); console.log(`[ADMIN] Updated "${team.name}"`);
+      json(res, 200, { success: true, team }); return;
     }
 
     // DELETE /api/admin/team/:id
     if (m === 'DELETE' && p.startsWith('/api/admin/team/')) {
       if (!isAdmin(req)) { json(res, 401, { error: 'Unauthorized' }); return; }
-      const id = p.split('/').pop(), idx = teams.findIndex(t => t.id === id);
-      if (idx === -1) { json(res, 404, { error: 'Not found' }); return; }
-      const rm = teams.splice(idx, 1)[0]; teams.forEach((t, i) => { t.slot = i + 1; });
-      const sf = path.join(SS_DIR, id + '.b64'); if (fs.existsSync(sf)) fs.unlinkSync(sf);
-      saveTeams(teams); console.log(`[ADMIN] Removed "${rm.name}"`);
-      json(res, 200, { success: true, removed: rm.name, slotsLeft: MAX_SLOTS - teams.length }); return;
+      const id = p.split('/').pop();
+      const team = await Team.findOneAndDelete({ id });
+      if (!team) { json(res, 404, { error: 'Not found' }); return; }
+      const all = await Team.find().sort({ slot: 1 });
+      for (let i = 0; i < all.length; i++) { all[i].slot = i + 1; await all[i].save(); }
+      console.log(`[ADMIN] Removed "${team.name}"`);
+      json(res, 200, { success: true, removed: team.name, slotsLeft: MAX_SLOTS - all.length }); return;
     }
 
     // DELETE /api/admin/teams
     if (m === 'DELETE' && p === '/api/admin/teams') {
       if (!isAdmin(req)) { json(res, 401, { error: 'Unauthorized' }); return; }
-      teams = []; saveTeams(teams);
-      try { fs.readdirSync(SS_DIR).forEach(f => fs.unlinkSync(path.join(SS_DIR, f))); } catch (e) { }
+      await Team.deleteMany({});
       console.log('[ADMIN] Cleared all');
       json(res, 200, { success: true }); return;
     }
 
     // GET /api/schedule
-    if (m === 'GET' && p === '/api/schedule') { json(res, 200, { schedule }); return; }
+    if (m === 'GET' && p === '/api/schedule') { const s = await getSchedule(); json(res, 200, { schedule: s }); return; }
 
     // PUT /api/admin/schedule
     if (m === 'PUT' && p === '/api/admin/schedule') {
       if (!isAdmin(req)) { json(res, 401, { error: 'Unauthorized' }); return; }
-      const b = await parseBody(req);
-      if (typeof b.date === 'string') schedule.date = b.date;
-      if (typeof b.time === 'string') schedule.time = b.time;
-      if (typeof b.countdown === 'string') schedule.countdown = b.countdown;
-      if (typeof b.isLive === 'boolean') schedule.isLive = b.isLive;
-      saveSchedule(schedule);
-      console.log(`[ADMIN] Schedule updated: ${schedule.date} ${schedule.time} count=${schedule.countdown} live=${schedule.isLive}`);
-      json(res, 200, { success: true, schedule }); return;
+      const b = await parseBody(req), s = await getSchedule();
+      if (typeof b.date === 'string') s.date = b.date;
+      if (typeof b.time === 'string') s.time = b.time;
+      if (typeof b.countdown === 'string') s.countdown = b.countdown;
+      if (typeof b.isLive === 'boolean') s.isLive = b.isLive;
+      await s.save();
+      console.log(`[ADMIN] Schedule updated: ${s.date} ${s.time} count=${s.countdown} live=${s.isLive}`);
+      json(res, 200, { success: true, schedule: s }); return;
     }
 
     res.writeHead(404); res.end('Not found');
