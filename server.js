@@ -14,14 +14,13 @@ let teams = loadTeams();
 console.log(`Loaded ${teams.length} teams`);
 
 function parseBody(req) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     let body = '';
     req.on('data', chunk => {
       body += chunk;
-      if (body.length > 25e6) {
+      if (body.length > 50e6) { // 50MB Limit
         console.error('Payload too large:', body.length);
-        req.destroy();
-        reject(new Error('Payload too large'));
+        resolve({ _error: 'Payload too large' });
       }
     });
     req.on('end', () => {
@@ -30,10 +29,9 @@ function parseBody(req) {
         resolve(JSON.parse(body));
       } catch (e) {
         console.error('Body parse err:', e.message);
-        resolve({});
+        resolve({ _error: 'Invalid JSON' });
       }
     });
-    req.on('error', err => reject(err));
   });
 }
 function setCORS(res) { res.setHeader('Access-Control-Allow-Origin', '*'); res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS'); res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization'); }
@@ -43,29 +41,30 @@ function isAdmin(req) { return req.headers['authorization'] === `Bearer ${ADMIN_
 function hasScreenshot(id) { return fs.existsSync(path.join(SS_DIR, id + '.b64')); }
 
 const server = http.createServer(async (req, res) => {
-  const p = url.parse(req.url, true).pathname, m = req.method;
-  if (m === 'OPTIONS') { setCORS(res); res.writeHead(204); res.end(); return; }
-  if (m === 'GET' && (p === '/' || p === '/index.html')) { serve(res, 'index.html', 'text/html'); return; }
-  if (m === 'GET' && p === '/admin.html') { serve(res, 'admin.html', 'text/html'); return; }
+  try {
+    const p = url.parse(req.url, true).pathname, m = req.method;
+    if (m === 'OPTIONS') { setCORS(res); res.writeHead(204); res.end(); return; }
+    if (m === 'GET' && (p === '/' || p === '/index.html')) { serve(res, 'index.html', 'text/html'); return; }
+    if (m === 'GET' && p === '/admin.html') { serve(res, 'admin.html', 'text/html'); return; }
 
-  // Screenshot serving
-  if (m === 'GET' && p.startsWith('/api/screenshot/')) {
-    const tid = p.replace('/api/screenshot/', '').replace(/[^a-z0-9]/gi, '');
-    const fp = path.join(SS_DIR, tid + '.b64');
-    if (!fs.existsSync(fp)) { setCORS(res); res.writeHead(404); res.end(); return; }
-    try {
-      const raw = fs.readFileSync(fp, 'utf8');
-      const mm = raw.match(/^data:(image\/[a-z]+);base64,/);
-      const ct = mm ? mm[1] : 'image/jpeg';
-      const buf = Buffer.from(raw.replace(/^data:image\/[a-z]+;base64,/, ''), 'base64');
-      setCORS(res); res.writeHead(200, { 'Content-Type': ct, 'Content-Length': buf.length, 'Cache-Control': 'max-age=86400' }); res.end(buf);
-    } catch (e) { res.writeHead(500); res.end(); }
-    return;
-  }
+    // Screenshot serving
+    if (m === 'GET' && p.startsWith('/api/screenshot/')) {
+      const tid = p.replace('/api/screenshot/', '').replace(/[^a-z0-9]/gi, '');
+      const fp = path.join(SS_DIR, tid + '.b64');
+      if (!fs.existsSync(fp)) { setCORS(res); res.writeHead(404); res.end(); return; }
+      try {
+        const raw = fs.readFileSync(fp, 'utf8');
+        const mm = raw.match(/^data:(image\/[a-z]+);base64,/);
+        const ct = mm ? mm[1] : 'image/jpeg';
+        const buf = Buffer.from(raw.replace(/^data:image\/[a-z]+;base64,/, ''), 'base64');
+        setCORS(res); res.writeHead(200, { 'Content-Type': ct, 'Content-Length': buf.length, 'Cache-Control': 'max-age=86400' }); res.end(buf);
+      } catch (e) { res.writeHead(500); res.end(); }
+      return;
+    }
 
-  // Admin panel
-  if (m === 'GET' && p === '/admin') {
-    const adminHtml = `<!DOCTYPE html>
+    // Admin panel
+    if (m === 'GET' && p === '/admin') {
+      const adminHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -282,105 +281,110 @@ function toast(m){const t=document.getElementById('toast');t.textContent=m;t.cla
 </script>
 </body>
 </html>`;
-    setCORS(res); res.writeHead(200, { 'Content-Type': 'text/html' }); res.end(adminHtml); return;
-  }
-
-  // GET /api/teams
-  if (m === 'GET' && p === '/api/teams') {
-    const out = teams.map(t => ({ ...t, hasScreenshot: hasScreenshot(t.id) }));
-    json(res, 200, { teams: out, maxSlots: MAX_SLOTS, slotsLeft: MAX_SLOTS - teams.length }); return;
-  }
-
-  // POST /api/register
-  if (m === 'POST' && p === '/api/register') {
-    const b = await parseBody(req);
-    if (!b.teamName || !b.teamName.trim()) { json(res, 400, { error: 'Team name required' }); return; }
-    if (!b.players || b.players.length !== 4 || b.players.some(x => !x || !x.trim())) { json(res, 400, { error: 'All 4 players required' }); return; }
-    if (teams.length >= MAX_SLOTS) { json(res, 400, { error: 'All slots filled!' }); return; }
-    if (teams.some(t => t.name.toLowerCase() === b.teamName.trim().toLowerCase())) { json(res, 400, { error: 'Team name taken!' }); return; }
-    const team = { id: Date.now().toString(36) + Math.random().toString(36).substr(2, 4), name: b.teamName.trim(), players: b.players.map(x => x.trim()), slot: teams.length + 1, registeredAt: new Date().toISOString(), verified: false };
-    if (b.paymentScreenshot && typeof b.paymentScreenshot === 'string' && b.paymentScreenshot.startsWith('data:image/')) {
-      try { fs.writeFileSync(path.join(SS_DIR, team.id + '.b64'), b.paymentScreenshot, 'utf8'); } catch (e) { console.error('SS save err:', e.message); }
+      setCORS(res); res.writeHead(200, { 'Content-Type': 'text/html' }); res.end(adminHtml); return;
     }
-    teams.push(team); saveTeams(teams);
-    console.log(`[REG] "${team.name}" slot #${team.slot}`);
-    json(res, 200, { success: true, team, slotsLeft: MAX_SLOTS - teams.length }); return;
-  }
 
-  // Static files (after all API routes)
-  if (m === 'GET' && !p.startsWith('/api/') && p !== '/' && p !== '/admin') {
-    const dp = decodeURIComponent(p);
-    const lp = path.join(__dirname, dp);
-    if (fs.existsSync(lp) && fs.lstatSync(lp).isFile()) {
-      const ext = path.extname(dp).toLowerCase();
-      let ct = 'text/plain';
-      if (ext === '.png') ct = 'image/png';
-      else if (ext === '.jpg' || ext === '.jpeg') ct = 'image/jpeg';
-      else if (ext === '.gif') ct = 'image/gif';
-      else if (ext === '.css') ct = 'text/css';
-      else if (ext === '.js') ct = 'text/javascript';
-      else if (ext === '.html') ct = 'text/html';
-      serve(res, dp, ct); return;
+    // GET /api/teams
+    if (m === 'GET' && p === '/api/teams') {
+      const out = teams.map(t => ({ ...t, hasScreenshot: hasScreenshot(t.id) }));
+      json(res, 200, { teams: out, maxSlots: MAX_SLOTS, slotsLeft: MAX_SLOTS - teams.length }); return;
     }
+
+    // POST /api/register
+    if (m === 'POST' && p === '/api/register') {
+      const b = await parseBody(req);
+      if (b._error) { json(res, 400, { error: b._error }); return; }
+      if (!b.teamName || !b.teamName.trim()) { json(res, 400, { error: 'Team name required' }); return; }
+      if (!b.players || b.players.length !== 4 || b.players.some(x => !x || !x.trim())) { json(res, 400, { error: 'All 4 players required' }); return; }
+      if (teams.length >= MAX_SLOTS) { json(res, 400, { error: 'All slots filled!' }); return; }
+      if (teams.some(t => t.name.toLowerCase() === b.teamName.trim().toLowerCase())) { json(res, 400, { error: 'Team name taken!' }); return; }
+      const team = { id: Date.now().toString(36) + Math.random().toString(36).substr(2, 4), name: b.teamName.trim(), players: b.players.map(x => x.trim()), slot: teams.length + 1, registeredAt: new Date().toISOString(), verified: false };
+      if (b.paymentScreenshot && typeof b.paymentScreenshot === 'string' && b.paymentScreenshot.startsWith('data:image/')) {
+        try { fs.writeFileSync(path.join(SS_DIR, team.id + '.b64'), b.paymentScreenshot, 'utf8'); } catch (e) { console.error('SS save err:', e.message); }
+      }
+      teams.push(team); saveTeams(teams);
+      console.log(`[REG] "${team.name}" slot #${team.slot}`);
+      json(res, 200, { success: true, team, slotsLeft: MAX_SLOTS - teams.length }); return;
+    }
+
+    // Static files (after all API routes)
+    if (m === 'GET' && !p.startsWith('/api/') && p !== '/' && p !== '/admin') {
+      const dp = decodeURIComponent(p);
+      const lp = path.join(__dirname, dp);
+      if (fs.existsSync(lp) && fs.lstatSync(lp).isFile()) {
+        const ext = path.extname(dp).toLowerCase();
+        let ct = 'text/plain';
+        if (ext === '.png') ct = 'image/png';
+        else if (ext === '.jpg' || ext === '.jpeg') ct = 'image/jpeg';
+        else if (ext === '.gif') ct = 'image/gif';
+        else if (ext === '.css') ct = 'text/css';
+        else if (ext === '.js') ct = 'text/javascript';
+        else if (ext === '.html') ct = 'text/html';
+        serve(res, dp, ct); return;
+      }
+    }
+
+    // PUT /api/admin/verify/:id
+    if (m === 'PUT' && p.startsWith('/api/admin/verify/')) {
+      if (!isAdmin(req)) { json(res, 401, { error: 'Unauthorized' }); return; }
+      const id = p.replace('/api/admin/verify/', ''), b = await parseBody(req), idx = teams.findIndex(t => t.id === id);
+      if (idx === -1) { json(res, 404, { error: 'Not found' }); return; }
+      teams[idx].verified = !!b.verified; saveTeams(teams);
+      console.log(`[ADMIN] ${teams[idx].verified ? 'Verified' : 'Unverified'} "${teams[idx].name}"`);
+      json(res, 200, { success: true, verified: teams[idx].verified }); return;
+    }
+
+    // PUT /api/admin/team/:id
+    if (m === 'PUT' && p.startsWith('/api/admin/team/')) {
+      if (!isAdmin(req)) { json(res, 401, { error: 'Unauthorized' }); return; }
+      const id = p.split('/').pop(), b = await parseBody(req), idx = teams.findIndex(t => t.id === id);
+      if (idx === -1) { json(res, 404, { error: 'Not found' }); return; }
+      if (b.teamName) teams[idx].name = b.teamName.trim();
+      if (b.players && b.players.length === 4) teams[idx].players = b.players.map(x => x.trim());
+      saveTeams(teams); console.log(`[ADMIN] Updated "${teams[idx].name}"`);
+      json(res, 200, { success: true, team: teams[idx] }); return;
+    }
+
+    // DELETE /api/admin/team/:id
+    if (m === 'DELETE' && p.startsWith('/api/admin/team/')) {
+      if (!isAdmin(req)) { json(res, 401, { error: 'Unauthorized' }); return; }
+      const id = p.split('/').pop(), idx = teams.findIndex(t => t.id === id);
+      if (idx === -1) { json(res, 404, { error: 'Not found' }); return; }
+      const rm = teams.splice(idx, 1)[0]; teams.forEach((t, i) => { t.slot = i + 1; });
+      const sf = path.join(SS_DIR, id + '.b64'); if (fs.existsSync(sf)) fs.unlinkSync(sf);
+      saveTeams(teams); console.log(`[ADMIN] Removed "${rm.name}"`);
+      json(res, 200, { success: true, removed: rm.name, slotsLeft: MAX_SLOTS - teams.length }); return;
+    }
+
+    // DELETE /api/admin/teams
+    if (m === 'DELETE' && p === '/api/admin/teams') {
+      if (!isAdmin(req)) { json(res, 401, { error: 'Unauthorized' }); return; }
+      teams = []; saveTeams(teams);
+      try { fs.readdirSync(SS_DIR).forEach(f => fs.unlinkSync(path.join(SS_DIR, f))); } catch (e) { }
+      console.log('[ADMIN] Cleared all');
+      json(res, 200, { success: true }); return;
+    }
+
+    // GET /api/schedule
+    if (m === 'GET' && p === '/api/schedule') { json(res, 200, { schedule }); return; }
+
+    // PUT /api/admin/schedule
+    if (m === 'PUT' && p === '/api/admin/schedule') {
+      if (!isAdmin(req)) { json(res, 401, { error: 'Unauthorized' }); return; }
+      const b = await parseBody(req);
+      if (typeof b.date === 'string') schedule.date = b.date;
+      if (typeof b.time === 'string') schedule.time = b.time;
+      if (typeof b.isLive === 'boolean') schedule.isLive = b.isLive;
+      saveSchedule(schedule);
+      console.log(`[ADMIN] Schedule updated: ${schedule.date} ${schedule.time} live=${schedule.isLive}`);
+      json(res, 200, { success: true, schedule }); return;
+    }
+
+    res.writeHead(404); res.end('Not found');
+  } catch (err) {
+    console.error('Server Err:', err.message);
+    try { json(res, 500, { error: 'Internal Server Error' }); } catch (e) { res.end(); }
   }
-
-  // PUT /api/admin/verify/:id
-  if (m === 'PUT' && p.startsWith('/api/admin/verify/')) {
-    if (!isAdmin(req)) { json(res, 401, { error: 'Unauthorized' }); return; }
-    const id = p.replace('/api/admin/verify/', ''), b = await parseBody(req), idx = teams.findIndex(t => t.id === id);
-    if (idx === -1) { json(res, 404, { error: 'Not found' }); return; }
-    teams[idx].verified = !!b.verified; saveTeams(teams);
-    console.log(`[ADMIN] ${teams[idx].verified ? 'Verified' : 'Unverified'} "${teams[idx].name}"`);
-    json(res, 200, { success: true, verified: teams[idx].verified }); return;
-  }
-
-  // PUT /api/admin/team/:id
-  if (m === 'PUT' && p.startsWith('/api/admin/team/')) {
-    if (!isAdmin(req)) { json(res, 401, { error: 'Unauthorized' }); return; }
-    const id = p.split('/').pop(), b = await parseBody(req), idx = teams.findIndex(t => t.id === id);
-    if (idx === -1) { json(res, 404, { error: 'Not found' }); return; }
-    if (b.teamName) teams[idx].name = b.teamName.trim();
-    if (b.players && b.players.length === 4) teams[idx].players = b.players.map(x => x.trim());
-    saveTeams(teams); console.log(`[ADMIN] Updated "${teams[idx].name}"`);
-    json(res, 200, { success: true, team: teams[idx] }); return;
-  }
-
-  // DELETE /api/admin/team/:id
-  if (m === 'DELETE' && p.startsWith('/api/admin/team/')) {
-    if (!isAdmin(req)) { json(res, 401, { error: 'Unauthorized' }); return; }
-    const id = p.split('/').pop(), idx = teams.findIndex(t => t.id === id);
-    if (idx === -1) { json(res, 404, { error: 'Not found' }); return; }
-    const rm = teams.splice(idx, 1)[0]; teams.forEach((t, i) => { t.slot = i + 1; });
-    const sf = path.join(SS_DIR, id + '.b64'); if (fs.existsSync(sf)) fs.unlinkSync(sf);
-    saveTeams(teams); console.log(`[ADMIN] Removed "${rm.name}"`);
-    json(res, 200, { success: true, removed: rm.name, slotsLeft: MAX_SLOTS - teams.length }); return;
-  }
-
-  // DELETE /api/admin/teams
-  if (m === 'DELETE' && p === '/api/admin/teams') {
-    if (!isAdmin(req)) { json(res, 401, { error: 'Unauthorized' }); return; }
-    teams = []; saveTeams(teams);
-    try { fs.readdirSync(SS_DIR).forEach(f => fs.unlinkSync(path.join(SS_DIR, f))); } catch (e) { }
-    console.log('[ADMIN] Cleared all');
-    json(res, 200, { success: true }); return;
-  }
-
-  // GET /api/schedule
-  if (m === 'GET' && p === '/api/schedule') { json(res, 200, { schedule }); return; }
-
-  // PUT /api/admin/schedule
-  if (m === 'PUT' && p === '/api/admin/schedule') {
-    if (!isAdmin(req)) { json(res, 401, { error: 'Unauthorized' }); return; }
-    const b = await parseBody(req);
-    if (typeof b.date === 'string') schedule.date = b.date;
-    if (typeof b.time === 'string') schedule.time = b.time;
-    if (typeof b.isLive === 'boolean') schedule.isLive = b.isLive;
-    saveSchedule(schedule);
-    console.log(`[ADMIN] Schedule updated: ${schedule.date} ${schedule.time} live=${schedule.isLive}`);
-    json(res, 200, { success: true, schedule }); return;
-  }
-
-  res.writeHead(404); res.end('Not found');
 });
 
 server.listen(PORT, () => {
