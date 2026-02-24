@@ -44,13 +44,18 @@ function parseBody(req) {
     });
   });
 }
-function setCORS(res) { res.setHeader('Access-Control-Allow-Origin', '*'); res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS'); res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization'); }
+function setCORS(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+}
 function json(res, c, d) { setCORS(res); res.writeHead(c, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(d)); }
 function serve(res, f, ct) {
   const p = path.join(__dirname, f);
   if (!fs.existsSync(p)) { res.writeHead(404); res.end('Not found'); return; }
   const h = { 'Content-Type': ct };
   if (ct.startsWith('image/')) h['Cache-Control'] = 'public, max-age=86400';
+  setCORS(res);
   res.writeHead(200, h);
   fs.createReadStream(p).pipe(res);
 }
@@ -350,7 +355,8 @@ function toast(m){const t=document.getElementById('toast');t.textContent=m;t.cla
       if (!b.players || b.players.length !== 4 || b.players.some(x => !x || !x.trim())) { json(res, 400, { error: 'All 4 players required' }); return; }
       const count = await Team.countDocuments();
       if (count >= MAX_SLOTS) { json(res, 400, { error: 'All slots filled!' }); return; }
-      const exists = await Team.findOne({ name: new RegExp('^' + b.teamName.trim() + '$', 'i') });
+      const safeName = b.teamName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const exists = await Team.findOne({ name: new RegExp('^' + safeName + '$', 'i') });
       if (exists) { json(res, 400, { error: 'Team name taken!' }); return; }
       const team = new Team({
         id: Date.now().toString(36) + Math.random().toString(36).substr(2, 4),

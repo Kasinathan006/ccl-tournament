@@ -1696,7 +1696,7 @@
                 </a>
             </div>
         </div>
-        <img class="logo-img" src="CCL LOGO.png" alt="CCL Logo" decoding="async">
+        <img class="logo-img" src="CCL LOGO.png" alt="CCL Logo" fetchpriority="high" decoding="async">
         <h1 class="main-title">COMRADE CHAMPION LEAGUE</h1>
         <p class="sub-title">SKILL DEFINE THE CHAMPIONS</p>
 
@@ -1756,7 +1756,7 @@
 
                 <div class="map-section">
                     <div class="map-frame">
-                        <img class="map-image" src="map.png" alt="Tournament Map" loading="lazy" decoding="async">
+                        <img class="map-image" src="map.png" alt="Tournament Map" decoding="async">
                     </div>
                     <div class="map-details">
                         <div class="map-detail-item">MODE: <span class="highlight">BR ( E-SPORTS MODE )</span></div>
@@ -1945,6 +1945,7 @@
                 const r = await fetch(API + '/teams');
                 const d = await r.json();
                 teams = d.teams;
+                if (typeof checkReady === 'function') checkReady();
                 return d;
             } catch (e) {
                 teams = JSON.parse(localStorage.getItem('cclTeams') || '[]');
@@ -1978,7 +1979,9 @@
         }
 
         function updateCount() {
-            document.getElementById('slotsLeft').textContent = MAX - teams.length;
+            const el = document.getElementById('slotsLeft');
+            if (el) el.textContent = MAX - teams.length;
+            checkReady();
         }
 
         function checkFull() {
